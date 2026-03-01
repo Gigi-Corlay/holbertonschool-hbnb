@@ -46,3 +46,31 @@
 🎓 PROFESOR: ¿Qué hace exactamente load_dotenv() y por qué es importante para la seguridad?
 
 ✅ RESPUESTA: load_dotenv() lee el archivo .env que está en la raíz del proyecto y carga todas las variables definidas ahí como variables de entorno del sistema operativo. Esto es importante porque el .env está en el .gitignore — nunca se sube a GitHub. Entonces podemos poner claves secretas como SECRET_KEY en ese archivo sin riesgo de exponerlas públicamente. El código solo accede a esas claves a través de os.getenv(), que las lee del entorno en tiempo de ejecución.
+
+
+---
+---
+
+Imaginate que tenemos que construir un AirBnB desde cero. En la Parte 1 solo hicimos los planos — dibujamos cómo iba a ser todo sin escribir código. En la Parte 2 empezamos a construir de verdad.
+
+## ¿Qué construimos exactamente?
+Básicamente construimos el "cerebro" y la "ventanilla" de la aplicación.
+La ventanilla es la API — es lo que el mundo exterior puede ver y usar. Si alguien quiere registrar un usuario, crear un lugar o dejar una reseña, lo hace hablándole a la ventanilla. Nosotros definimos exactamente qué ventanillas existen, qué información aceptan y qué responden.
+El cerebro es toda la lógica detrás. Las reglas de negocio: que el email tiene que ser válido, que el precio no puede ser negativo, que no podés crear una reseña para un lugar que no existe. Todo eso vive en el cerebro.
+
+## ¿Cómo lo organizamos?
+Lo dividimos en tres partes que no se mezclan entre sí:
+La primera es la ventanilla (API) — solo recibe y envía información. No piensa, no guarda nada, solo comunica.
+La segunda es el cerebro (modelos y facade) — aquí están las reglas. Si algo no cumple las reglas, se rechaza antes de llegar a cualquier otro lado.
+La tercera es el almacén (repositorio) — es donde guardamos temporalmente los datos mientras la aplicación está corriendo. Por ahora es simplemente un diccionario de Python en memoria, como una libreta que se borra cada vez que apagás el servidor.
+
+## ¿Y para qué sirve la Facade?
+Pensala como un recepcionista. Cuando la ventanilla recibe un pedido, no va ella misma a buscar los datos ni a validar nada — le dice al recepcionista "necesito crear este usuario" y el recepcionista se encarga de todo: verifica que el email no esté repetido, crea el objeto, lo guarda en el almacén y devuelve el resultado. La ventanilla no sabe ni le importa cómo se hizo, solo recibe la respuesta.
+
+## ¿Qué puede hacer la aplicación ahora?
+Al final de esta parte, nuestra API puede gestionar cuatro cosas: usuarios, lugares, comodidades y reseñas. Para cada una implementamos las operaciones básicas — crear, listar, buscar por ID y actualizar. Las reseñas además se pueden eliminar.
+Todo esto se puede probar visualmente desde el navegador entrando a http://127.0.0.1:5000/api/v1/, donde Flask genera automáticamente una página de documentación interactiva llamada Swagger.
+
+## ¿Y los tests?
+Al final verificamos que todo funcione correctamente con 54 tests automatizados. Estos tests prueban no solo que las cosas funcionen bien cuando los datos son correctos, sino también que la aplicación responda con el error correcto cuando los datos son incorrectos — email inválido, lugar inexistente, rating fuera de rango, etc.
+En resumen: pasamos de tener solo planos a tener una API funcional, organizada y completamente testeada, lista para conectarle una base de datos real en la Parte 3.
