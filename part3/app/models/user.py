@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import re
 from app.models.base_model import BaseModel
+from app import bcrypt
 
 class User(BaseModel):
     def __init__(self, first_name, last_name, email, password="", is_admin=False):
@@ -18,9 +19,21 @@ class User(BaseModel):
         self.first_name = first_name
         self.last_name = last_name
         self.email = email
-        self.password = password
         self.is_admin = is_admin
         self.places = []
+
+        # hashing password
+        self.password = None
+        if password:
+            self.hash_password(password)
+    
+    def hash_password(self, password):
+        """Hashes the password before storing"""
+        self.password = bcrypt.generate_password_hash(password).decode("utf-8")
+
+    def verify_password(self, password):
+        """Check if password matches with stored hash"""
+        return bcrypt.check_password_hash(self.password, password)
 
     def update_profile(self, data):
         """Update user profile with validation"""
@@ -37,3 +50,11 @@ class User(BaseModel):
                 raise ValueError("Invalid email")
         # All validations passed, now apply the changes and update the timestamp
         self.update(data)
+
+    def to_dict(self):
+        """Return dictionary representation
+        without password (protection)"""
+        data = super().to_dict()
+        if "password" in data:
+            del data["password"]
+        return data
