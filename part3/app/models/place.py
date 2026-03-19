@@ -2,6 +2,11 @@
 from app.extensions import db
 from app.models.base_model import BaseModel
 
+# Association table for Many-to-Many relationship between Place and Amenity
+place_amenity = db.Table('place_amenity',
+    db.Column('place_id', db.String(36), db.ForeignKey('places.id'), primary_key=True),
+    db.Column('amenity_id', db.String(36), db.ForeignKey('amenities.id'), primary_key=True)
+)
 
 class Place(BaseModel):
     __tablename__ = 'places'
@@ -12,16 +17,14 @@ class Place(BaseModel):
     price       = db.Column(db.Float, nullable=False)
     latitude    = db.Column(db.Float, nullable=False)
     longitude   = db.Column(db.Float, nullable=False)
-    owner_id    = db.Column(db.String(36), nullable=False)
+    owner_id    = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
 
-    def add_review(self, review):
-        """Add a review to the place."""
-        pass
-
-    def add_amenity(self, amenity):
-        """Add an amenity to the place."""
-        pass
-
+    # One-to-Many: Place → Review
+    reviews   = db.relationship('Review', backref='place', lazy=True)
+    # Many-to-Many: Place ↔ Amenity
+    amenities = db.relationship('Amenity', secondary=place_amenity, lazy='subquery',
+                                backref=db.backref('places', lazy=True))
+    
     def update_details(self, data):
         """Update place details with validation"""
         if "title" in data:

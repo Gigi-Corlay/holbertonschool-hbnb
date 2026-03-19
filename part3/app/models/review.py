@@ -8,8 +8,9 @@ class Review(BaseModel):
     # Columns mapped to the database
     text     = db.Column(db.String(1000), nullable=False)
     rating   = db.Column(db.Integer, nullable=False)
-    place_id = db.Column(db.String(36), nullable=False)
-    user_id  = db.Column(db.String(36), nullable=False)
+    # ForeignKeys: references places and users tables
+    place_id = db.Column(db.String(36), db.ForeignKey('places.id'), nullable=False)
+    user_id  = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
 
     def validate_rating(self, rating):
         """Validates that rating is between 1 and 5"""

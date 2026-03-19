@@ -3140,11 +3140,333 @@ development.db
 ```
 
 Las relaciones entre estas tablas (`ForeignKey`, `db.relationship`) se agregan en el Task 8.
+
 ---
 ---
 
-#   Task 8
+# Task 8 — Map Relationships Between Entities
+## Objetivo
 
+Agregar relaciones entre las entidades usando SQLAlchemy — `ForeignKey` para las referencias y `relationship()` para navegar entre objetos.
+
+## Las 4 relaciones a implementar
+
+| Relación | Tipo | Descripción |
+|---|---|---|
+| User → Place | One-to-Many | Un usuario puede poseer muchos lugares |
+| Place → Review | One-to-Many | Un lugar puede tener muchas reviews |
+| User → Review | One-to-Many | Un usuario puede escribir muchas reviews |
+| Place ↔ Amenity | Many-to-Many | Un lugar tiene muchas amenities y viceversa |
+
+---
+
+## Conceptos clave
+
+### ForeignKey
+
+Le dice a la base de datos que una columna referencia la clave primaria de otra tabla:
+
+```python
+owner_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
+#                                    └── tabla.columna referenciada
+```
+
+### relationship()
+
+Le dice a SQLAlchemy cómo navegar entre objetos en Python:
+
+```python
+# En User:
+places = db.relationship('Place', backref='owner', lazy=True)
+
+# Permite hacer:
+user.places      → lista de lugares del usuario
+place.owner      → objeto User dueño del lugar (backref)
+```
+
+### backref
+
+Crea automáticamente la relación inversa sin tener que definirla en el otro modelo:
+
+```python
+# En User definimos:
+places = db.relationship('Place', backref='owner', lazy=True)
+
+# Automáticamente Place tiene:
+place.owner  →  objeto User ✅  (sin definirlo en place.py)
+```
+
+### lazy=True
+
+Le dice a SQLAlchemy cuándo cargar los datos relacionados:
+- `lazy=True` — carga los datos solo cuando los pedís (`user.places`)
+- `lazy='subquery'` — carga todos los datos relacionados en una sola query
+
+---
+
+## Paso 1 — `app/models/place.py`
+
+**Antes:**
+```python
+owner_id    = db.Column(db.String(36), nullable=False)
+
+def add_review(self, review):
+    pass
+
+def add_amenity(self, amenity):
+    pass
+```
+
+**Después:**
+```python
+#!/usr/bin/python3
+from app.extensions import db
+from app.models.base_model import BaseModel
+
+# Association table for Many-to-Many relationship between Place and Amenity
+place_amenity = db.Table('place_amenity',
+    db.Column('place_id', db.String(36), db.ForeignKey('places.id'), primary_key=True),
+    db.Column('amenity_id', db.String(36), db.ForeignKey('amenities.id'), primary_key=True)
+)
+
+class Place(BaseModel):
+    __tablename__ = 'places'
+
+    title       = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.String(500), nullable=True)
+    price       = db.Column(db.Float, nullable=False)
+    latitude    = db.Column(db.Float, nullable=False)
+    longitude   = db.Column(db.Float, nullable=False)
+    # ForeignKey: references the users table
+    owner_id    = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
+
+    # One-to-Many: Place → Review
+    reviews   = db.relationship('Review', backref='place', lazy=True)
+    # Many-to-Many: Place ↔ Amenity
+    amenities = db.relationship('Amenity', secondary=place_amenity, lazy='subquery',
+                                backref=db.backref('places', lazy=True))
+
+    def update_details(self, data):
+        """Update place details with validation"""
+        if "title" in data:
+            if not data["title"] or len(data["title"]) > 100:
+                raise ValueError("Invalid title")
+        if "price" in data:
+            try:
+                data["price"] = float(data["price"])
+            except (ValueError, TypeError):
+                raise ValueError("Price must be a valid number")
+            if data["price"] <= 0:
+                raise ValueError("Price must be positive")
+        if "latitude" in data:
+            try:
+                data["latitude"] = float(data["latitude"])
+            except (ValueError, TypeError):
+                raise ValueError("Latitude must be a valid number")
+            if not (-90 <= data["latitude"] <= 90):
+                raise ValueError("Latitude must be between -90 and 90")
+        if "longitude" in data:
+            try:
+                data["longitude"] = float(data["longitude"])
+            except (ValueError, TypeError):
+                raise ValueError("Longitude must be a valid number")
+            if not (-180 <= data["longitude"] <= 180):
+                raise ValueError("Longitude must be between -180 and 180")
+        self.update(data)
+```
+
+---
+
+### Cambios explicados
+
+**`place_amenity` — tabla de asociación Many-to-Many**
+
+Las relaciones Many-to-Many no se pueden representar directamente en SQL.
+Se necesita una tabla intermedia que guarda los pares `place_id` + `amenity_id`:
+
+```
+place_amenity
+┌──────────────────────────────────────────┐
+│ place_id          │ amenity_id           │
+│ "abc-123..."      │ "def-456..."  (WiFi) │
+│ "abc-123..."      │ "ghi-789..."  (Pool) │
+│ "xyz-999..."      │ "def-456..."  (WiFi) │
+└──────────────────────────────────────────┘
+```
+
+---
+
+#### **`owner_id = db.Column(..., db.ForeignKey('users.id'))`**
+
+Cambia de texto plano a una referencia real a la tabla `users`.
+Si intentás crear un lugar con un `owner_id` que no existe en `users` → error de integridad.
+
+---
+
+#### **`reviews = db.relationship('Review', backref='place', lazy=True)`**
+Define la relación one-to-many entre Place y Review en Python.
+
+```python
+'Review'      →  nombre del modelo con el que se relaciona
+backref='place' →  crea automáticamente place.owner en Review
+lazy=True     →  carga las reviews solo cuando las pedís
+```
+
+Lo que permite hacer:
+-   `place.reviews`     →  lista de todas las reviews de ese lugar
+-   `review.place`      →  objeto Place de esa review (backref automático)
+Sin esto tendrías que hacer queries manuales cada vez que quisieras las reviews de un lugar.
+- El `backref='place'` crea automáticamente `review.place` → objeto Place
+
+---
+
+#### **`amenities = db.relationship('Amenity', secondary=place_amenity, lazy='subquery', backref=db.backref('places', lazy=True))`**
+Define la relación many-to-many entre Place y Amenity:
+
+```python
+'Amenity'              →  modelo con el que se relaciona
+secondary=place_amenity →  usa la tabla intermedia place_amenity
+lazy='subquery'        →  carga todas las amenities en una sola query
+backref=db.backref('places', lazy=True)  →  crea amenity.places automáticamente
+```
+
+Lo que permite hacer:
+```python
+place.amenities    →  lista de amenities de ese lugar
+amenity.places     →  lista de lugares que tienen esa amenity (backref)
+```
+- `secondary=place_amenity` — usa la tabla de asociación para la relación
+- Permite acceder con `place.amenities` → lista de amenities
+- El `backref` crea `amenity.places` → lista de lugares que tienen esa amenity
+
+#### ¿Por qué `backref=db.backref(...)` y no solo `backref='places'`?
+Porque en la relación many-to-many necesitamos configurar el lazy del backref también.  
+`db.backref('places', lazy=True)` permite pasar opciones extra al backref inverso.
+```python
+# Relación simple — backref sin opciones:
+backref='place'
+
+# Relación many-to-many — backref con opciones:
+backref=db.backref('places', lazy=True)
+```
+
+---
+
+#### **¿Por qué `lazy=True` en reviews y `lazy='subquery'` en amenities?**
+```python
+reviews   → lazy=True     → se cargan solo cuando hacés place.reviews
+amenities → lazy='subquery' → se cargan todas de una vez en una sola query SQL
+```
+
+---
+
+## Paso 2 — `app/models/review.py`
+
+**Antes:**
+```python
+place_id = db.Column(db.String(36), nullable=False)
+user_id  = db.Column(db.String(36), nullable=False)
+```
+
+**Después:**
+```python
+#!/usr/bin/python3
+from app.extensions import db
+from app.models.base_model import BaseModel
+
+
+class Review(BaseModel):
+    __tablename__ = 'reviews'
+
+    text     = db.Column(db.String(1000), nullable=False)
+    rating   = db.Column(db.Integer, nullable=False)
+    # ForeignKeys: references places and users tables
+    place_id = db.Column(db.String(36), db.ForeignKey('places.id'), nullable=False)
+    user_id  = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
+
+    def validate_rating(self, rating):
+        """Validates that rating is between 1 and 5"""
+        if not isinstance(rating, int) or not (1 <= rating <= 5):
+            raise ValueError("Rating must be an integer between 1 and 5")
+
+    def update_review(self, data):
+        """Update review with validation"""
+        if "text" in data:
+            if not data["text"] or not data["text"].strip():
+                raise ValueError("text is required")
+        if "rating" in data:
+            self.validate_rating(data["rating"])
+        self.update(data)
+```
+
+### Cambios explicados
+
+**`place_id = db.Column(..., db.ForeignKey('places.id'))`**
+
+Review ahora referencia directamente la tabla `places`.
+No se puede crear una review para un lugar que no existe.
+
+**`user_id = db.Column(..., db.ForeignKey('users.id'))`**
+
+Review ahora referencia directamente la tabla `users`.
+No se puede crear una review de un usuario que no existe.
+
+No se agrega `relationship()` en Review porque la navegación ya está cubierta por los `backref` definidos en `Place` y `User`.
+
+---
+
+## Paso 3 — `app/models/user.py`
+
+Solo se agregan dos `relationship()` para navegar desde User:
+
+```python
+# Agregar dentro de la clase User, después de las columnas:
+
+# One-to-Many: User → Place
+places  = db.relationship('Place', backref='owner', lazy=True)
+# One-to-Many: User → Review
+reviews = db.relationship('Review', backref='user', lazy=True)
+```
+
+Esto permite:
+```python
+user.places   →  lista de lugares del usuario
+user.reviews  →  lista de reviews del usuario
+place.owner   →  objeto User dueño del lugar  (backref)
+review.author →  objeto User autor de la review (backref)
+```
+
+---
+
+## Paso 4 — `app/models/amenity.py`
+
+No necesita cambios — el `backref` definido en `place.py` ya crea automáticamente `amenity.places`.
+
+---
+
+## Resumen de relaciones
+
+```
+User (1) ────────────────── Place (muchos)
+  │                            │
+  │  one-to-many               │  one-to-many
+  │                            │
+  └── Review (muchos)   Place (muchos) ←──→ Amenity (muchos)
+                              many-to-many via place_amenity
+```
+
+## Resumen de navegación después del Task 8
+
+```python
+user.places        →  lista de lugares del usuario
+user.reviews       →  lista de reviews del usuario
+place.owner        →  objeto User dueño del lugar
+place.reviews      →  lista de reviews del lugar
+place.amenities    →  lista de amenities del lugar
+review.place       →  objeto Place de la review
+review.author      →  objeto User autor de la review
+amenity.places     →  lista de lugares con esa amenity
+```
 ---
 ---
 
