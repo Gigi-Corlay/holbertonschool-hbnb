@@ -1,86 +1,81 @@
 #!/usr/bin/python3
-
+from app.extensions import db
 from app.models.base_model import BaseModel
 
 
-class Place(BaseModel):
-    def __init__(self, title, description, price, latitude, longitude, owner_id):
-        super().__init__()
+"""
+Association table for many-to-many relationship
+"""
+place_amenity = db.Table(
+    "place_amenity",
+    db.Column("place_id", db.String(36), db.ForeignKey("places.id"), primary_key=True),
+    db.Column("amenity_id", db.String(36), db.ForeignKey("amenities.id"), primary_key=True)
+)
 
-        try:
-            price = float(price)
-            latitude = float(latitude)
-            longitude = float(longitude)
-        except (ValueError, TypeError):
-            raise ValueError("Price, latitude, and longitude must be valid numbers")
 
-        if not title or len(title) > 100:
-            raise ValueError("Invalid title")
+class Place(BaseModel, db.Model):
+    __tablename__ = "places"
 
-        if price <= 0:
-            raise ValueError("Price must be positive")
+    id = db.Column(db.String(36), primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.String(255), default="")
+    price = db.Column(db.Float, nullable=False)
+    latitude = db.Column(db.Float, nullable=False)
+    longitude = db.Column(db.Float, nullable=False)
 
-        if not (-90 <= latitude <= 90):
-            raise ValueError("Invalid latitude")
+    """
+    Foreign key
+    """
+    user_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
 
-        if not (-180 <= longitude <= 180):
-            raise ValueError("Invalid longitude")
+    """
+    Relationships
+    """
+    reviews = db.relationship('Review', backref='place', lazy=True)
 
-        if not isinstance(owner_id, str) or not owner_id.strip():
-            raise ValueError("Invalid owner_id")
+    amenities = db.relationship(
+        "Amenity",
+        secondary=place_amenity,
+        backref=db.backref("places", lazy=True),
+        lazy=True
+    )
 
-        self.title = title
-        self.description = description
+    def __init__(self, title, price, latitude, longitude, description="", **kwargs):
+        super().__init__(**kwargs)
+
+        if not title or not title.strip() or len(title.strip()) > 100:
+            raise ValueError("Place title is required and cannot exceed 100 characters")
+
+        if description and len(description) > 255:
+            raise ValueError("Place description cannot exceed 255 characters")
+
+        if price < 0:
+            raise ValueError("Price must be non-negative")
+
+        self.title = title.strip()
+        self.description = description.strip() if description else ""
         self.price = price
         self.latitude = latitude
         self.longitude = longitude
-        self.owner_id = owner_id
 
-        self.reviews = [] # List to store related reviews
-        self.amenities = [] # List to store related amenities
-
-
-    def add_review(self, review):
-        """
-        Add a review to the place.
-        """
-        self.reviews.append(review)
-
-    def add_amenity(self, amenity):
-        """
-        Add an amenity to the place.
-        """
-        self.amenities.append(amenity)
-
-    def update_details(self, data):
-        """Update place details with validation"""
+    def update_place(self, data):
         if "title" in data:
-            if not data["title"] or len(data["title"]) > 100:
-                raise ValueError("Invalid title")
+            title = data["title"]
+            if not title or not title.strip() or len(title.strip()) > 100:
+                raise ValueError("Place title cannot be empty or exceed 100 characters")
+            data["title"] = title.strip()
+
+        if "description" in data:
+            description = data["description"]
+            if description and len(description) > 255:
+                raise ValueError("Place description cannot exceed 255 characters")
+            data["description"] = description.strip() if description else ""
 
         if "price" in data:
-            try:
-                data["price"] = float(data["price"])
-            except (ValueError, TypeError):
-                raise ValueError("Price must be a valid number")
-            if data["price"] <= 0:
-                raise ValueError("Price must be positive")
+            if data["price"] < 0:
+                raise ValueError("Price must be non-negative")
 
-        if "latitude" in data:
-            try:
-                data["latitude"] = float(data["latitude"])
-            except (ValueError, TypeError):
-                raise ValueError("Latitude must be a valid number")
-            if not (-90 <= data["latitude"] <= 90):
-                raise ValueError("Latitude must be between -90 and 90")
-
-        if "longitude" in data:
-            try:
-                data["longitude"] = float(data["longitude"])
-            except (ValueError, TypeError):
-                raise ValueError("Longitude must be a valid number")
-            if not (-180 <= data["longitude"] <= 180):
-                raise ValueError("Longitude must be between -180 and 180")
-
-        # All validations passed, now apply the changes and update the timestamp
         self.update(data)
+
+    def __repr__(self):
+        return f"<Place id={self.id} title={self.title}>"
