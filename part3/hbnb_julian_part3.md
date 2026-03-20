@@ -3467,10 +3467,319 @@ review.place       →  objeto Place de la review
 review.author      →  objeto User autor de la review
 amenity.places     →  lista de lugares con esa amenity
 ```
+
 ---
 ---
 
-#   Task 9
+# Task 9 — SQL Scripts for Table Generation and Initial Data
+## Objetivo
+
+Crear scripts SQL puros para:
+1. Generar el esquema completo de la base de datos (todas las tablas)
+2. Insertar datos iniciales (usuario admin y amenities básicas)
+
+---
+
+## ¿Por qué SQL puro si ya tenemos SQLAlchemy?
+
+**SQLAlchemy** genera las tablas automáticamente con `db.create_all()`. Pero es importante entender cómo se ve el esquema a nivel de SQL puro — sin ORM de por medio.
+
+```
+SQLAlchemy  →  Python genera las tablas automáticamente
+SQL puro    →  vos escribís exactamente cómo se crean las tablas
+```
+
+En producción real, los DBAs (administradores de bases de datos) trabajan con SQL puro — no con ORMs.
+
+---
+
+## Archivos a crear
+
+| Archivo | Para qué sirve |
+|---|---|
+| `create_tables.sql` | Crea todas las tablas con sus constraints |
+| `initial_data.sql` | Inserta el admin y las amenities iniciales |
+
+---
+
+## `create_tables.sql` — Task 9
+Crea todas las tablas de la base de datos con sus columnas, tipos de datos y restricciones.
+Se ejecuta una sola vez para inicializar el esquema.
+
+### Orden de creación
+El orden importa por las FOREIGN KEY — hay que crear primero las tablas referenciadas:
+```
+1. users          → no depende de nadie
+2. amenities      → no depende de nadie
+3. places         → depende de users
+4. reviews        → depende de users y places
+5. place_amenity  → depende de places y amenities
+```
+
+---
+
+### Tabla `users`
+```sql
+CREATE TABLE IF NOT EXISTS users (
+    id         CHAR(36) PRIMARY KEY,
+    first_name VARCHAR(255) NOT NULL,
+    last_name  VARCHAR(255) NOT NULL,
+    email      VARCHAR(255) NOT NULL UNIQUE,
+    password   VARCHAR(255) NOT NULL,
+    is_admin   BOOLEAN DEFAULT FALSE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+| Columna| Tipo | Restricción | Para qué sirve |
+| :... | :...  | :...  | :... |
+| id | CHAR(36) | PRIMARY KEY | UUID de 36 caracteres |
+| first_name | VARCHAR(255) | NOT NULL | obligatorio |
+| last_name | VARCHAR(255) | NOT NULL | obligatorio |
+|email | VARCHAR(255) | NOT NULL UNIQUE | obligatorio y único| 
+| password | VARCHAR(255) | NOT NULL | hash bcrypt| 
+| is_admin | BOOLEAN | DEFAULT FALSE | False por defecto |
+| created_at | DATETIME | DEFAULT CURRENT_TIMESTAMP | se asigna al crear |
+| updated_at | DATETIME | DEFAULT CURRENT_TIMESTAMP | se asigna al crear| 
+
+---
+
+### Tabla `amenities`
+
+```sql
+CREATE TABLE IF NOT EXISTS amenities (
+    id         CHAR(36) PRIMARY KEY,
+    name       VARCHAR(255) NOT NULL UNIQUE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+```
+Simple — solo `id` y `name`.  
+El `UNIQUE` en `name` evita duplicados como dos "WiFi".
+
+---
+
+### Tabla `places`
+
+```sql
+CREATE TABLE IF NOT EXISTS places (
+    id          CHAR(36) PRIMARY KEY,
+    title       VARCHAR(255) NOT NULL,
+    description TEXT,
+    price       DECIMAL(10, 2) NOT NULL,
+    latitude    FLOAT NOT NULL,
+    longitude   FLOAT NOT NULL,
+    owner_id    CHAR(36) NOT NULL,
+    created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (owner_id) REFERENCES users(id)
+);
+```
+`DECIMAL(10, 2)` — número con hasta 10 dígitos totales y 2 decimales. Ideal para precios:
+```
+100.00  ✅
+99.99   ✅
+```
+`FOREIGN KEY (owner_id) REFERENCES users(id)` — no se puede crear un lugar con un `owner_id` que no existe en `users`.  
+Garantiza integridad referencial.
+
+---
+
+### Tabla `reviews`
+
+```sql
+CREATE TABLE IF NOT EXISTS reviews (
+    id         CHAR(36) PRIMARY KEY,
+    text       TEXT NOT NULL,
+    rating     INT NOT NULL CHECK (rating BETWEEN 1 AND 5),
+    user_id    CHAR(36) NOT NULL,
+    place_id   CHAR(36) NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (place_id) REFERENCES places(id),
+    UNIQUE (user_id, place_id)  -- un usuario solo puede reviewar un lugar una vez
+);
+```
+`CHECK (rating BETWEEN 1 AND 5)` — restricción a nivel de base de datos. No permite insertar un rating fuera de ese rango.
+`UNIQUE (user_id, place_id)` — constraint compuesto. La combinación de ambos debe ser única:
+```
+user_id=ABC, place_id=XYZ  → primera review ✅
+user_id=ABC, place_id=XYZ  → segunda review del mismo user al mismo place ❌
+user_id=ABC, place_id=DEF  → review a otro place ✅
+```
+
+---
+
+### Tabla `place_amenity` (tabla de asociación Many-to-Many)
+
+```sql
+CREATE TABLE IF NOT EXISTS place_amenity (
+    place_id   CHAR(36) NOT NULL,
+    amenity_id CHAR(36) NOT NULL,
+    PRIMARY KEY (place_id, amenity_id),
+    FOREIGN KEY (place_id)   REFERENCES places(id),
+    FOREIGN KEY (amenity_id) REFERENCES amenities(id)
+);
+```
+Es la tabla de asociación de la relación **Many-to-Many** entre `places` y `amenities`.  
+No tiene id propio — su clave primaria es la combinación de `place_id` + `amenity_id`:
+
+```
+place_amenity
+┌─────────────────────────────────────────┐
+│ place_id      │ amenity_id              │
+│ "abc-123..."  │ "def-456..."  (WiFi)    │
+│ "abc-123..."  │ "ghi-789..."  (Pool)    │
+│ "xyz-999..."  │ "def-456..."  (WiFi)    │
+└─────────────────────────────────────────┘
+```
+`PRIMARY KEY (place_id, amenity_id)` — clave primaria compuesta.  
+No pueden existir dos filas con la misma combinación — un lugar no puede tener la misma amenity dos veces.
+
+---
+
+`IF NOT EXISTS`
+Todas las tablas usan `CREATE TABLE IF NOT EXISTS` — si la tabla ya existe no tira error, simplemente no hace nada.  
+Permite ejecutar el script múltiples veces sin problemas.
+
+---
+
+### Conceptos SQL clave
+
+**`CHAR(36)`** — texto de exactamente 36 caracteres. Un UUID tiene siempre 36 caracteres:
+```
+550e8400-e29b-41d4-a716-446655440000
+```
+
+**`PRIMARY KEY`** — identifica unívocamente cada fila. No puede ser NULL ni repetirse.
+
+**`FOREIGN KEY`** — referencia la clave primaria de otra tabla. Garantiza integridad referencial:
+```sql
+FOREIGN KEY (owner_id) REFERENCES users(id)
+-- No se puede crear un Place con un owner_id que no existe en users
+```
+
+**`UNIQUE`** — no puede haber dos filas con el mismo valor en esa columna.
+
+**`UNIQUE (user_id, place_id)`** — constraint compuesto: la combinación de ambos debe ser única. Un usuario puede reviewar distintos lugares, pero no el mismo dos veces.
+
+**`CHECK (rating BETWEEN 1 AND 5)`** — restricción a nivel de base de datos que valida el valor.
+
+### Orden de creación de tablas
+
+El orden importa por las `FOREIGN KEY` — hay que crear primero las tablas referenciadas:
+
+```
+1. users          (no depende de nadie)
+2. amenities      (no depende de nadie)
+3. places         (depende de users)
+4. reviews        (depende de users y places)
+5. place_amenity  (depende de places y amenities)
+```
+
+Si creás `places` antes que `users`, la `FOREIGN KEY` fallará porque `users` no existe todavía.
+
+---
+
+## `initial_data.sql` — Task 9
+**¿Qué hace este archivo?**
+Inserta los datos iniciales necesarios para que la app funcione desde el primer arranque:
+-   Un usuario administrador
+-   Las amenities básicas
+
+### Admin user
+El password `admin1234` debe estar hasheado con bcrypt antes de insertarlo.
+Se genera con Python:
+```python
+from flask_bcrypt import Bcrypt
+bcrypt = Bcrypt()
+print(bcrypt.generate_password_hash("admin1234").decode('utf-8'))
+# → $2b$12$...
+```
+
+```sql
+INSERT INTO users (id, first_name, last_name, email, password, is_admin)
+VALUES (
+    '36c9050e-ddd3-4c3b-9731-9f487208bbc1',
+    'Admin',
+    'HBnB',
+    'admin@hbnb.io',
+    '$2b$12$...hash_generado_aqui...',
+    TRUE
+);
+```
+**¿Por qué el ID es fijo?**
+El task especifica exactamente este `UUID`:
+```
+36c9050e-ddd3-4c3b-9731-9f487208bbc1
+```
+Esto garantiza que en todos los entornos (desarrollo, producción, testing) el admin siempre tenga el mismo `ID`.  
+Es útil si otros scripts o datos referencian este `ID`.  
+**'Admin'** 
+first_name del usuario admin.
+**'HBnB'**
+last_name del usuario admin. El task especifica exactamente estos valores.
+**'admin@hbnb.io'**
+email del admin. Con este email se hace login:
+```bash
+curl -X POST ".../auth/login" -d '{"email": "admin@hbnb.io", "password": "admin1234"}'
+```
+**¿Por qué el password está hasheado?**
+Nunca se guarda una contraseña en texto plano en la base de datos.  
+El hash fue generado con:
+```bash
+python3 -c "from flask_bcrypt import Bcrypt; b = Bcrypt(); print(b.generate_password_hash('admin1234').decode('utf-8'))"
+```
+```
+admin1234  →  bcrypt  →  $2b$12$MTSEhoujf8FmOK1c...
+```
+**TRUE**
+`is_admin = TRUE`: este usuario tiene privilegios de administrador desde el inicio.
+Le da privilegios de administrador para acceder a los endpoints protegidos como `POST /users, POST /amenities`, etc.
+
+Son los valores que van en cada columna del INSERT:
+```sql
+INSERT INTO users (id,        first_name, last_name, email,           password,   is_admin)
+VALUES            ('36c9...', 'Admin',    'HBnB',    'admin@hbnb.io', '$2b$12...', TRUE);
+```
+
+---
+
+### Amenities iniciales
+
+```sql
+INSERT INTO amenities (id, name) VALUES
+    ('550e8400-e29b-41d4-a716-446655440001', 'WiFi'),
+    ('550e8400-e29b-41d4-a716-446655440002', 'Swimming Pool'),
+    ('550e8400-e29b-41d4-a716-446655440003', 'Air Conditioning');
+```
+Los IDs son UUIDs fijos generados manualmente.  
+Se pueden insertar múltiples filas en un solo `INSERT` separando los valores con comas.
+**¿Por qué IDs fijos para las amenities?**
+Por la misma razón que el admin — consistencia entre entornos.  
+Si en el futuro un script o test referencia `'550e8400-e29b-41d4-a716-446655440001'` para WiFi, siempre funcionará.
+
+---
+
+**Diferencia entre `create_tables.sql` e `initial_data.sql`**
+| Archivo | Cuándo se ejecuta | Para qué sirve |
+| `create_tables.sql` | Una vez al inicializar | Crea la estructura de la base de datos |
+| `initial_data.sql` | Una vez al inicializar | Inserta los datos mínimos necesarios |
+El orden de ejecución es siempre:
+```
+1. create_tables.sql  →  primero crear las tablas
+2. initial_data.sql   →  luego insertar los datos
+```
+
+---
+
+
+
+---
+
+
 
 ---
 ---
