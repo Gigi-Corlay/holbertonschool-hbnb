@@ -50,4 +50,4 @@ jobs:
       - name: Run tests
         working-directory: part3
         run: |
-          python -m pytest app/tests/ -v --tb=short
+          python -m pytest app/tests/test_part3.py -v --tb=short

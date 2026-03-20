@@ -103,12 +103,12 @@ class PlaceResource(Resource):
             'latitude': place.latitude,
             'longitude': place.longitude,
             'owner': {
-                'id': place.owner.id,
-                'first_name': place.owner.first_name,
-                'last_name': place.owner.last_name,
-                'email': place.owner.email
+                'id': getattr(place.owner, 'id', None),
+                'first_name': getattr(place.owner, 'first_name', None),
+                'last_name': getattr(place.owner, 'last_name', None),
+                'email': getattr(place.owner, 'email', None)
             } if getattr(place, 'owner', None) else None,
-            'amenities': [{'id': a.id, 'name': a.name} for a in place.amenities] if hasattr(place, 'amenities') else [],
+            'amenities': [{'id': a.id, 'name': a.name} for a in getattr(place, 'amenities', [])],
             'reviews': [{'id': r.id, 'text': r.text, 'rating': r.rating, 'user_id': r.user_id} for r in reviews] if reviews else []
         }, 200
 
