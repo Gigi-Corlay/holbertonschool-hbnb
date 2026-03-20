@@ -14,13 +14,15 @@ class BaseModel(db.Model):
         default=lambda: str(uuid.uuid4())
     )
     created_at = db.Column(
-        db.DateTime,
-        default=lambda: datetime.now(timezone.utc)
+        db.DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False
     )
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc)
+        onupdate=lambda: datetime.now(timezone.utc),
+        nullable=False
     )
 
     def save(self):
@@ -29,14 +31,25 @@ class BaseModel(db.Model):
 
     def update(self, data):
         """Update the attributes of the object based on the provided dictionary"""
+        PROTECTED = {"id", "created_at"}
         for key, value in data.items():
-            if hasattr(self, key):
+            if hasattr(self, key) and key not in PROTECTED:
                 setattr(self, key, value)
-        self.save()
+        self.updated_at = datetime.now(timezone.utc)
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
 
     def delete(self):
         """Placeholder for delete operation"""
-        pass
+        try:
+            db.session.delete(self)
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
 
     def __repr__(self):
         return f"<{self.__class__.__name__} {self.id}>"

@@ -1408,6 +1408,38 @@ token → ¿is_admin?
     → si NO  → ¿es el dueño? → si no, 403
 ```
 
+
+### **`v1/places.py`** `timedelta(hours=1)`:
+`timedelta(hours=1)`:
+-   Define cuánto tiempo dura el token antes de expirar.
+-   Antes duraba 15 minutos (el default de flask-jwt-extended), ahora dura 1 hora
+-   Más cómodo para testear y usar la app sin tener que hacer login cada 15 minutos.
+```
+Sin timedelta    →  15 minutos (default)
+timedelta(hours=1) →  1 hora ✅
+```
+Ahora el último cambio — `places.py`.  
+Solo hay que hacer más robusto el GET de un lugar usando `getattr`:
+```python
+# ANTES:
+'owner': {
+    'id': place.owner.id,
+    'first_name': place.owner.first_name,
+    'last_name': place.owner.last_name,
+    'email': place.owner.email
+} if getattr(place, 'owner', None) else None,
+'amenities': [{'id': a.id, 'name': a.name} for a in place.amenities] if hasattr(place, 'amenities') else [],
+
+# DESPUÉS:
+'owner': {
+    'id': getattr(place.owner, 'id', None),
+    'first_name': getattr(place.owner, 'first_name', None),
+    'last_name': getattr(place.owner, 'last_name', None),
+    'email': getattr(place.owner, 'email', None)
+} if getattr(place, 'owner', None) else None,
+'amenities': [{'id': a.id, 'name': a.name} for a in getattr(place, 'amenities', [])],
+```
+
 #### **Importaciones nuevas**
 ```python
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
@@ -2305,6 +2337,10 @@ Antes:  self.id = str(uuid.uuid4())     →  atributo Python en memoria
 Después: id = db.Column(db.String(36))  →  columna en la tabla SQL
 ```
 
+---
+
+### Código completo
+
 ```python
 #!/usr/bin/python3
 import uuid
@@ -2314,9 +2350,22 @@ from app.extensions import db
 class BaseModel(db.Model):
     __abstract__ = True  # SQLAlchemy does not create a table for BaseModel
 
-    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    id = db.Column(
+        db.String(36),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4())
+    )
+    created_at = db.Column(
+        db.DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False
+    )
+    updated_at = db.Column(
+        db.DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+        nullable=False
+    )
 
     def save(self):
         """Update the updated_at timestamp whenever the object is modified"""
@@ -2324,31 +2373,45 @@ class BaseModel(db.Model):
 
     def update(self, data):
         """Update the attributes of the object based on the provided dictionary"""
+        PROTECTED = {"id", "created_at"}
         for key, value in data.items():
-            if hasattr(self, key):
+            if hasattr(self, key) and key not in PROTECTED:
                 setattr(self, key, value)
-        self.save()
+        self.updated_at = datetime.now(timezone.utc)
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
 
     def delete(self):
-        """Placeholder for delete operation"""
-        pass
+        """Delete object from database"""
+        try:
+            db.session.delete(self)
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
 
     def __repr__(self):
         return f"<{self.__class__.__name__} {self.id}>"
 ```
 
-### Cambios explicados
-#### **`class BaseModel(db.Model)`**
+---
 
-Antes heredaba de `object` (clase Python normal).  
-Ahora hereda de `db.Model` — esto le dice a SQLAlchemy que esta clase representa una tabla en la base de datos.
+### Cambios explicados
+
+#### `class BaseModel(db.Model)`
+
+Antes heredaba de `object` (clase Python normal).
+Ahora hereda de `db.Model` — le dice a SQLAlchemy que esta clase representa una tabla.
 
 ---
 
-#### **`__abstract__ = True`**
+#### `__abstract__ = True`
 
-Le dice a SQLAlchemy que `BaseModel` es una clase abstracta — no debe crear una tabla para ella.  
-Solo las clases que heredan de `BaseModel` (`User`, `Place`, etc.) tendrán tablas propias.
+Le dice a SQLAlchemy que no cree tabla para `BaseModel`.
+Solo las clases hijas tendrán tablas propias:
 
 ```
 BaseModel  →  __abstract__ = True  →  sin tabla ❌
@@ -2359,75 +2422,109 @@ Place      →  hereda BaseModel     →  tabla 'places' ✅
 ---
 
 #### `id`
+
 ```python
-id = db.Column(
-        db.String(36),
-        primary_key=True,
-        default=lambda: str(uuid.uuid4())
-    )
+id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
 ```
 
-| Parámetro | Valor | Para qué sirve |
-|---|---|---|
-| `db.String(36)` | tipo texto de 36 caracteres | un UUID tiene exactamente 36 caracteres |
-| `primary_key=True` | clave primaria | identifica unívocamente cada fila |
-| `default=lambda: str(uuid.uuid4())` | valor por defecto | genera un UUID automáticamente al crear |
+| Parámetro | Para qué sirve |
+|---|---|
+| `db.String(36)` | UUID tiene exactamente 36 caracteres |
+| `primary_key=True` | identifica unívocamente cada fila |
+| `default=lambda: str(uuid.uuid4())` | genera UUID automáticamente al crear |
 
 ---
 
-#### `created_at`
+#### `created_at` y `updated_at`
+
 ```python
 created_at = db.Column(
-        db.DateTime,
-        default=lambda: datetime.now(timezone.utc)
-    )
+    db.DateTime(timezone=True),        # timezone aware
+    default=lambda: datetime.now(timezone.utc),
+    nullable=False                      # no puede ser null
+)
+updated_at = db.Column(
+    db.DateTime(timezone=True),        # timezone aware
+    default=lambda: datetime.now(timezone.utc),
+    onupdate=lambda: datetime.now(timezone.utc),
+    nullable=False                      # no puede ser null
+)
 ```
 
-- `db.DateTime` — tipo fecha y hora en la base de datos
-- `default=lambda: datetime.now(timezone.utc)` — se establece automáticamente al crear el registro
+**`db.DateTime(timezone=True)`** — almacena la fecha con información de zona horaria. Más correcto que `db.DateTime` a secas.
 
-##### **¿Por qué `lambda: datetime.now(timezone.utc)` y no `datetime.now(timezone.utc)` directo?**
+**`nullable=False`** — los timestamps son obligatorios, no pueden ser NULL en la base de datos.
 
-Sin `lambda` el valor se evaluaría una sola vez cuando Python carga el archivo — todos los registros tendrían la misma fecha. Con `lambda` se ejecuta cada vez que se crea un registro nuevo.
+**`onupdate`** — se actualiza automáticamente cada vez que se modifica el registro.
 
-##### **¿Por qué `timezone.utc` y no `datetime.now()` a secas?**
-
-`datetime.now()` usa la hora local de tu máquina. `datetime.now(timezone.utc)` usa la hora universal (UTC) — más consistente cuando hay usuarios en distintas zonas horarias.  
-`utcnow()` hacía lo mismo pero está deprecado en Python 3.12+.
+**¿Por qué `lambda`?**
+Sin `lambda` el valor se evaluaría una sola vez al cargar el archivo — todos los registros tendrían la misma fecha. Con `lambda` se ejecuta cada vez que se crea un registro nuevo.
 
 ```
-datetime.now()              →  hora local de tu máquina ❌
+datetime.now()              →  hora local ❌
 datetime.utcnow()           →  UTC pero deprecado ⚠️
 datetime.now(timezone.utc)  →  UTC moderno ✅
 ```
 
 ---
 
-#### `updated_at`
+#### `update()` — cambios importantes
+
 ```python
-updated_at = db.Column(
-        db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc)
-    )
+def update(self, data):
+    PROTECTED = {"id", "created_at"}    # protege campos críticos
+    for key, value in data.items():
+        if hasattr(self, key) and key not in PROTECTED:
+            setattr(self, key, value)
+    self.updated_at = datetime.now(timezone.utc)
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        raise
 ```
 
-- `onupdate=lambda: datetime.now(timezone.utc)` — se actualiza automáticamente cada vez que se modifica el registro
-- No hay que llamar a `save()` manualmente — SQLAlchemy lo hace solo
+**`PROTECTED = {"id", "created_at"}`** — evita que alguien modifique el ID o la fecha de creación por error o maliciosamente.
+
+**`try/except` con `rollback()`** — si el `commit()` falla, deshace todos los cambios para no dejar la base de datos en estado inconsistente.
+
+```
+db.session.commit() falla
+    │
+    ▼
+db.session.rollback() → deshace todos los cambios ✅
+```
 
 ---
 
-#### **¿Por qué ya no necesitamos `__init__`?**
+#### `delete()` — implementación real
 
-Antes `__init__` era necesario para asignar los valores iniciales manualmente:
 ```python
-def __init__(self):
-    self.id = str(uuid.uuid4())       # había que asignarlo a mano
-    self.created_at = datetime.now()  # había que asignarlo a mano
-    self.updated_at = datetime.now()  # había que asignarlo a mano
+def delete(self):
+    try:
+        db.session.delete(self)
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        raise
 ```
 
-Ahora esos valores están definidos como `default` en las columnas — SQLAlchemy los asigna automáticamente al crear un objeto nuevo:
+Antes era solo un `pass` (placeholder).
+Ahora elimina el objeto de la base de datos correctamente con `rollback()` en caso de error.
+
+---
+
+#### ¿Por qué ya no necesitamos `__init__`?
+
+Antes había que asignar los valores manualmente:
+```python
+def __init__(self):
+    self.id = str(uuid.uuid4())
+    self.created_at = datetime.now()
+    self.updated_at = datetime.now()
+```
+
+Ahora SQLAlchemy los asigna automáticamente con los `default` de las columnas:
 ```
 Antes:   __init__() → vos asignás los valores
 Después: db.Column(default=...) → SQLAlchemy asigna los valores ✅
@@ -3062,7 +3159,7 @@ class Review(BaseModel):
 
     def validate_rating(self, rating):
         """Validates that rating is between 1 and 5"""
-        if not isinstance(rating, int) or not (1 <= rating <= 5):
+        if isinstance(rating, bool) or not isinstance(rating, int) or not (1 <= rating <= 5):
             raise ValueError("Rating must be an integer between 1 and 5")
 
     def update_review(self, data):
@@ -3089,6 +3186,11 @@ class Review(BaseModel):
 - `__init__` — SQLAlchemy lo maneja automáticamente
 - Import de `User` y `Place` — no se necesitan sin relaciones
 - `self.place_id` y `self.user_id` son columnas de texto por ahora — las relaciones van en Task 8
+
+
+### Agrega `isinstance(rating, bool)` al inicio de la condición.
+En Python `bool` es subclase de `int`, entonces `True == 1` y `False == 0` pasarían la validación sin este check.  
+Con esto, `True` y `False` son rechazados explícitamente.
 
 ---
 
@@ -3386,7 +3488,7 @@ class Review(BaseModel):
 
     def validate_rating(self, rating):
         """Validates that rating is between 1 and 5"""
-        if not isinstance(rating, int) or not (1 <= rating <= 5):
+        if isinstance(rating, bool) or not isinstance(rating, int) or not (1 <= rating <= 5):
             raise ValueError("Rating must be an integer between 1 and 5")
 
     def update_review(self, data):
@@ -3772,14 +3874,6 @@ El orden de ejecución es siempre:
 1. create_tables.sql  →  primero crear las tablas
 2. initial_data.sql   →  luego insertar los datos
 ```
-
----
-
-
-
----
-
-
 
 ---
 ---

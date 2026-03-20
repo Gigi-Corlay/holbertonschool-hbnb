@@ -14,7 +14,7 @@ class Review(BaseModel):
 
     def validate_rating(self, rating):
         """Validates that rating is between 1 and 5"""
-        if not isinstance(rating, int) or not (1 <= rating <= 5):
+        if isinstance(rating, bool) or not isinstance(rating, int) or not (1 <= rating <= 5):
             raise ValueError("Rating must be an integer between 1 and 5")
 
     def update_review(self, data):
