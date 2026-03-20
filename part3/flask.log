@@ -1,7 +1,0 @@
- * Serving Flask app 'run.py'
- * Debug mode: on
-/Users/georgiaboulnois/Desktop/Holberton-exercice/Hbnb/part3/holbertonschool-hbnb/part3/app/persistence/sqlalchemy_repository.py:15: SAWarning: Column 'users.id' is marked as a member of the primary key for table 'users', but has no Python-side or server-side default generator indicated, nor does it indicate 'autoincrement=True' or 'nullable=True', and no explicit value is passed.  Primary key columns typically may not store NULL.
-  db.session.commit()
-Address already in use
-Port 5000 is in use by another program. Either identify and stop that program, or start the server with a different port.
-On macOS, try disabling the 'AirPlay Receiver' service from System Preferences -> General -> AirDrop & Handoff.
