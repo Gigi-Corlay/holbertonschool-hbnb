@@ -1,227 +1,57 @@
-# HBnB Evolution — Part 3
+### Part 4 - Simple Web Client
 
-A RESTful API built with Flask, SQLAlchemy, and JWT authentication.
-This is Part 3 of the HBnB Evolution project — it extends the Part 2 prototype with real database persistence, authentication, and role-based access control.
+In this phase, you'll be focusing on the front-end development of your application using HTML5, CSS3, and JavaScript ES6. Your task is to design and implement an interactive user interface that connects with the back-end services you have developed in previous parts of the project.
 
----
+#### Objectives
 
-## Authors
+- Develop a user-friendly interface following provided design specifications.
+- Implement client-side functionality to interact with the back-end API.
+- Ensure secure and efficient data handling using JavaScript.
+- Apply modern web development practices to create a dynamic web application.
 
-- **Julian** — App Factory, RBAC, SQL Scripts, ER Diagrams, Tests
-- **Fabien** — JWT Authentication, Login Endpoint
-- **Georgia** — SQLAlchemy Repository, Model Mapping, Relationships
+#### Learning Goals
 
----
+- Understand and apply HTML5, CSS3, and JavaScript ES6 in a real-world project.
+- Learn to interact with back-end services using AJAX/Fetch API.
+- Implement authentication mechanisms and manage user sessions.
+- Use client-side scripting to enhance user experience without page reloads.
 
-## What's New in Part 3
+#### Tasks Breakdown
 
-| Feature | Description |
-|---|---|
-| 🔐 JWT Authentication | Login endpoint returns a signed token |
-| 🛡️ RBAC | Admins have elevated permissions |
-| 🗄️ SQLAlchemy | Data persists in SQLite (dev) or MySQL (prod) |
-| 🔗 Relationships | Foreign keys and many-to-many between entities |
-| 📜 SQL Scripts | Raw SQL for schema creation and initial data |
-| 📊 ER Diagram | Mermaid.js diagram of the database schema |
+1. **Design (Task 1)**
+   - Complete provided HTML and CSS files to match the given design specifications.
+   - Create pages for Login, List of Places, Place Details, and Add Review.
 
----
+2. **Login (Task 2)**
+   - Implement login functionality using the back-end API.
+   - Store the JWT token returned by the API in a cookie for session management.
 
-## Architecture
+3. **List of Places (Task 3)**
+   - Implement the main page to display a list of all places.
+   - Fetch places data from the API and implement client-side filtering based on country selection.
+   - Ensure the page redirects to the login page if the user is not authenticated.
 
-```
-part3/
-├── app/
-│   ├── __init__.py          # Application Factory (create_app)
-│   ├── extensions.py        # db, bcrypt, jwt instances
-│   ├── api/
-│   │   └── v1/
-│   │       ├── auth.py      # POST /api/v1/auth/login
-│   │       ├── users.py     # CRUD /api/v1/users/
-│   │       ├── places.py    # CRUD /api/v1/places/
-│   │       ├── reviews.py   # CRUD /api/v1/reviews/
-│   │       └── amenities.py # CRUD /api/v1/amenities/
-│   ├── models/
-│   │   ├── base_model.py    # SQLAlchemy base with id, created_at, updated_at
-│   │   ├── user.py          # User model + bcrypt
-│   │   ├── place.py         # Place model + place_amenity table
-│   │   ├── review.py        # Review model
-│   │   └── amenity.py       # Amenity model
-│   ├── persistence/
-│   │   ├── repository.py    # InMemoryRepository + SQLAlchemyRepository
-│   │   └── user_repository.py # UserRepository with get_user_by_email
-│   ├── services/
-│   │   └── facade.py        # HBnBFacade — connects API to persistence
-│   └── tests/
-│       └── test_part3.py    # Full test suite (61 tests)
-├── scripts/
-│   ├── create_tables.sql    # SQL schema creation
-│   └── initial_data.sql     # Admin user + amenities
-├── config.py                # Dev / Testing / Production configs
-├── run.py                   # Entry point
-└── ERD.md                   # Entity Relationship Diagram
-```
+4. **Place Details (Task 4)**
+   - Implement the detailed view of a place.
+   - Fetch place details from the API using the place ID.
+   - Provide access to the add review form if the user is authenticated.
 
-### Layer Architecture
+5. **Add Review (Task 5)**
+   - Implement the form to add a review for a place.
+   - Ensure the form is accessible only to authenticated users, redirecting others to the index page.
 
-```
-Presentation (API)
-      │
-      ▼
-Business Logic (Facade)
-      │
-      ▼
-Persistence (SQLAlchemyRepository)
-      │
-      ▼
-Database (SQLite / MySQL)
-```
+> [!WARNING]
+> When testing your client against yout API you'll probably get a Cross-Origin Resource Sharing (CORS) error. You'll need to modify your API code to allow your client to fetch data from the API.
+> Read [this article](https://medium.com/@mterrano1/cors-in-a-flask-api-38051388f8cc) for a depper understanding about CORS and how to configure your Flask API
+
+#### Resources
+
+- [HTML5 Documentation](https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/HTML5)
+- [CSS3 Documentation](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS3)
+- [JavaScript ES6 Features](https://developer.mozilla.org/en-US/docs/Web/JavaScript/New_in_JavaScript/ECMAScript_2015)
+- [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)
+- [Responsive Web Design Basics](https://web.dev/responsive-web-design-basics/)
+- [Handling Cookies in JavaScript](https://developer.mozilla.org/en-US/docs/Web/API/Document/cookie)
+- [Client-Side Form Validation](https://developer.mozilla.org/en-US/docs/Learn/Forms/Form_validation)
 
 ---
-
-## Installation
-
-**1. Clone the repository:**
-```bash
-git clone https://github.com/juliangf94/holbertonschool-hbnb.git
-cd holbertonschool-hbnb/part3
-```
-
-**2. Create and activate virtual environment:**
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-**3. Install dependencies:**
-```bash
-pip install -r requirements.txt
-```
-
-**4. Create environment file:**
-```bash
-cp .env.example .env
-```
-
-**5. Run the application:**
-```bash
-python3 run.py
-```
-
-The API will be available at `http://127.0.0.1:5000/api/v1/`
-
----
-
-## API Endpoints
-
-### Authentication
-| Method | Endpoint | Description | Auth |
-|---|---|---|---|
-| POST | `/api/v1/auth/login` | Login and get JWT token | Public |
-
-### Users
-| Method | Endpoint | Description | Auth |
-|---|---|---|---|
-| POST | `/api/v1/users/` | Create a user | Admin only |
-| GET | `/api/v1/users/` | List all users | Public |
-| GET | `/api/v1/users/<id>` | Get user by ID | Public |
-| PUT | `/api/v1/users/<id>` | Update user | Owner / Admin |
-
-### Places
-| Method | Endpoint | Description | Auth |
-|---|---|---|---|
-| POST | `/api/v1/places/` | Create a place | Authenticated |
-| GET | `/api/v1/places/` | List all places | Public |
-| GET | `/api/v1/places/<id>` | Get place by ID | Public |
-| PUT | `/api/v1/places/<id>` | Update place | Owner / Admin |
-| GET | `/api/v1/places/<id>/reviews` | Get reviews for a place | Public |
-
-### Reviews
-| Method | Endpoint | Description | Auth |
-|---|---|---|---|
-| POST | `/api/v1/reviews/` | Create a review | Authenticated |
-| GET | `/api/v1/reviews/` | List all reviews | Public |
-| GET | `/api/v1/reviews/<id>` | Get review by ID | Public |
-| PUT | `/api/v1/reviews/<id>` | Update review | Author / Admin |
-| DELETE | `/api/v1/reviews/<id>` | Delete review | Author / Admin |
-
-### Amenities
-| Method | Endpoint | Description | Auth |
-|---|---|---|---|
-| POST | `/api/v1/amenities/` | Create amenity | Admin only |
-| GET | `/api/v1/amenities/` | List all amenities | Public |
-| GET | `/api/v1/amenities/<id>` | Get amenity by ID | Public |
-| PUT | `/api/v1/amenities/<id>` | Update amenity | Admin only |
-
----
-
-## Authentication
-
-The API uses JWT (JSON Web Tokens). To access protected endpoints:
-
-**1. Login:**
-```bash
-curl -X POST "http://127.0.0.1:5000/api/v1/auth/login" \
-  -H "Content-Type: application/json" \
-  -d '{"email": "admin@hbnb.io", "password": "admin1234"}'
-```
-
-**2. Use the token:**
-```bash
-curl -X GET "http://127.0.0.1:5000/api/v1/users/" \
-  -H "Authorization: Bearer <your_token>"
-```
-
----
-
-## Database
-
-The application uses **SQLite** in development and can be configured for **MySQL** in production.
-
-**Initialize with SQL scripts:**
-```bash
-sqlite3 instance/development.db < scripts/create_tables.sql
-sqlite3 instance/development.db < scripts/initial_data.sql
-```
-
-**Default admin credentials:**
-- Email: `admin@hbnb.io`
-- Password: `admin1234`
-
----
-
-## Running Tests
-
-```bash
-cd part3
-source .venv/bin/activate
-python -m pytest app/tests/test_part3.py -v
-```
-
-The test suite covers all 10 tasks:
-- App Factory Configuration
-- Password Hashing
-- JWT Authentication
-- Authenticated Endpoints
-- RBAC (Role-Based Access Control)
-- SQLAlchemy Repository
-- Entity Mapping
-- Relationships
-- SQL Scripts
-- ER Diagram
-
----
-
-## Swagger UI
-
-Interactive API documentation available at:
-```
-http://127.0.0.1:5000/api/v1/
-```
-
-Click the 🔓 **Authorize** button and paste your JWT token to test protected endpoints directly from the browser.
-
----
-
-## ER Diagram
-
-See [ERD.md](./ERD.md) for the full entity relationship diagram.

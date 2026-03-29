@@ -56,11 +56,13 @@ class InMemoryRepository(Repository):
     def get_by_attribute(self, attr_name, attr_value):
         return next((obj for obj in self._storage.values() if getattr(obj, attr_name) == attr_value), None)
 
+
 # NEW: SQLAlchemy-based repository — replaces InMemoryRepository for real database persistence
 class SQLAlchemyRepository(Repository):
     def __init__(self, model):
         # Receives the model class (User, Place, etc.) to know which table to query
         self.model = model
+        self.session = db.session
 
     def add(self, obj):
         db.session.add(obj)

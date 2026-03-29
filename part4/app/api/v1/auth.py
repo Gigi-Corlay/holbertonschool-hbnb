@@ -11,6 +11,7 @@ login_model = api.model('Login', {
     'password': fields.String(required=True, description='User password')
 })
 
+
 @api.route('/login')
 class Login(Resource):
     @api.expect(login_model)
