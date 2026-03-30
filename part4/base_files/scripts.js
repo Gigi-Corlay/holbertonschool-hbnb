@@ -27,6 +27,7 @@ function toggleLoginLink() {
 ====================== */
 function createCards(places) {
     const container = document.getElementById('places-list');
+    if (!container) return;
     container.innerHTML = '';
 
     places.forEach(place => {
@@ -34,12 +35,15 @@ function createCards(places) {
         col.className = 'col-md-4 d-flex mb-3';
 
         col.innerHTML = `
-            <article class="place-card p-3 border rounded text-center flex-fill d-flex flex-column justify-content-between" data-price="${place.price}">
+        <article class="place-card card p-3 w-100 d-flex flex-column" data-price="${place.price}">
+            <div class="card-body flex-grow-1">
                 <h2>${place.name}</h2>
                 <p>Price per night: $${place.price}</p>
-                <a href="place_review.html?id=${place.id}" class="btn btn-rose mt-3 mx-auto">View Details</a>
-            </article>
+            </div>
+            <a href="place_review.html?id=${place.id}" class="btn btn-rose mt-3">View Details</a>
+        </article>
         `;
+
         container.appendChild(col);
     });
 }
@@ -58,10 +62,10 @@ function setupPriceFilter() {
             const price = parseInt(card.getAttribute('data-price'));
             const col = card.parentElement;
 
-            if (!selectedPrice || price === selectedPrice) {
-                col.classList.remove('d-none'); // montre la card
+            if (!selectedPrice || price <= selectedPrice) {
+                col.classList.remove('d-none');
             } else {
-                col.classList.add('d-none');    // cache la card
+                col.classList.add('d-none');
             }
         });
     });
@@ -76,7 +80,7 @@ async function loadPlaces() {
         if (!response.ok) throw new Error(`Impossible de charger les places (status ${response.status})`);
 
         const places = await response.json();
-        if (!places.length) return false; // si vide, ne rien faire
+        if (!places.length) return false;
 
         createCards(places);
         setupPriceFilter();
@@ -100,14 +104,22 @@ function handleLogin() {
         const password = form.password.value;
 
         try {
+            // === AJOUT DES LOGS ===
+            console.log("Tentative login", { email, password });
+
             const response = await fetch(`${API_URL}/auth/login`, {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password })
             });
 
+            console.log("Réponse login", response.status);
+
             const data = await response.json();
+            console.log("Data login", data);
+
             if (response.ok) {
+                // Stocke le JWT dans un cookie
                 document.cookie = `token=${data.access_token}; path=/`;
                 toggleLoginLink();
                 window.location.href = 'index.html';
@@ -128,11 +140,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     toggleLoginLink();
     handleLogin();
 
-    // Essaie de charger l'API
     const apiLoaded = await loadPlaces();
 
-    // Si API vide ou non disponible, créer les cartes fixes pour test
     if (!apiLoaded) {
+        // Création de cartes fixes si l'API ne répond pas
         const fixedPlaces = [
             { id: 1, name: "Beautiful Beach House", price: 150 },
             { id: 2, name: "Cozy Cabin", price: 100 },
