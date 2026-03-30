@@ -104,14 +104,21 @@ h1, h2, h3 {
     background-color: #fff;     /* fond blanc */
 }
 
-/* Place cards specific */
-.place-card {
-    background-color: #fff;
-}
-
 /* Review cards specific */
 .review-card {
     background-color: #fff;
+}
+
+/* Place cards specific */
+.place-card {
+    display: flex;
+    flex-direction: column;
+    background-color: #fff;
+    min-height: 200px; /* ou la hauteur qui te convient */
+}
+
+.place-card a.btn {
+    margin-top: auto; /* pousse le bouton en bas */
 }
 
 /* ===== size rating ===== */

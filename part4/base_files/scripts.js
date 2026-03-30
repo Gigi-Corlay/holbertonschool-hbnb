@@ -30,19 +30,22 @@ function createCards(places) {
     if (!container) return;
     container.innerHTML = '';
 
+    // Tri des places par prix croissant
+    places.sort((a, b) => (a.price_by_night || a.price || 0) - (b.price_by_night || b.price || 0));
+
     places.forEach(place => {
+        const price = Number(place.price_by_night || place.price || 0);
+
         const col = document.createElement('div');
-        col.className = 'col-md-4 d-flex mb-3';
+        col.className = 'col-md-4 mb-3';
 
         col.innerHTML = `
-        <article class="place-card card p-3 w-100 d-flex flex-column" data-price="${place.price}">
-            <div class="card-body flex-grow-1">
-                <h2>${place.name}</h2>
-                <p>Price per night: $${place.price}</p>
-            </div>
-            <a href="place_review.html?id=${place.id}" class="btn btn-rose mt-3">View Details</a>
-        </article>
-        `;
+    <article class="place-card card p-3 d-flex flex-column w-100" data-price="${price}">
+        <h2>${place.name}</h2>
+        <p>Price per night: $${price}</p>
+        <a href="place_review.html?id=${place.id}" class="btn btn-rose mt-auto">View Details</a>    
+    </article>
+    `;
 
         container.appendChild(col);
     });
@@ -56,19 +59,32 @@ function setupPriceFilter() {
     if (!priceFilter) return;
 
     priceFilter.addEventListener('change', function () {
-        const selectedPrice = this.value ? parseInt(this.value) : null;
+        const selected = this.value;
+        const cards = document.querySelectorAll('.place-card');
 
-        document.querySelectorAll('.place-card').forEach(card => {
-            const price = parseInt(card.getAttribute('data-price'));
+        cards.forEach(card => {
+            const price = parseFloat(card.dataset.price);
             const col = card.parentElement;
 
-            if (!selectedPrice || price <= selectedPrice) {
-                col.classList.remove('d-none');
-            } else {
-                col.classList.add('d-none');
+            if (selected === "") {
+                // All
+                col.style.display = "";
+            } else if (selected === "10") {
+                // 1 à 49
+                col.style.display = price <= 49 ? "" : "none";
+            } else if (selected === "50") {
+                // 50 à 99
+                col.style.display = price >= 50 && price <= 99 ? "" : "none";
+            } else if (selected === "100") {
+                // 100 et plus
+                col.style.display = price >= 100 ? "" : "none";
             }
         });
     });
+
+    // Appliquer le filtre au chargement pour que "All" soit sélectionné par défaut
+    const event = new Event('change');
+    priceFilter.dispatchEvent(event);
 }
 
 /* ======================
@@ -83,7 +99,6 @@ async function loadPlaces() {
         if (!places.length) return false;
 
         createCards(places);
-        setupPriceFilter();
         return true;
     } catch (err) {
         console.error(err);
@@ -104,7 +119,6 @@ function handleLogin() {
         const password = form.password.value;
 
         try {
-            // === AJOUT DES LOGS ===
             console.log("Tentative login", { email, password });
 
             const response = await fetch(`${API_URL}/auth/login`, {
@@ -143,13 +157,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const apiLoaded = await loadPlaces();
 
     if (!apiLoaded) {
-        // Création de cartes fixes si l'API ne répond pas
+        // fallback si l'API est indisponible
         const fixedPlaces = [
-            { id: 1, name: "Beautiful Beach House", price: 150 },
-            { id: 2, name: "Cozy Cabin", price: 100 },
-            { id: 3, name: "Modern Apartment", price: 200 }
+            { id: 1, name: "Beautiful Beach House", price: 10 },
+            { id: 3, name: "Modern Apartment", price: 50 },
+            { id: 4, name: "Luxury Villa", price: 100 }
         ];
         createCards(fixedPlaces);
-        setupPriceFilter();
     }
+
+    setupPriceFilter();
 });
