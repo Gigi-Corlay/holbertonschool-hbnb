@@ -173,6 +173,7 @@ footer {
     font-weight: 500;       /* medium */
 }
 
+
 /* ===== Responsive adjustments ===== */
 @media (max-width: 768px) {
     header, nav, main, footer {

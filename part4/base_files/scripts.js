@@ -378,3 +378,67 @@ document.addEventListener('DOMContentLoaded', async () => {
         setupPriceFilter();
     }
 });
+
+
+/* ======================
+    FORM
+====================== */
+function setupAddReviewForm() {
+    const addReviewSection = document.getElementById('add-review');
+    if (!addReviewSection) return;
+
+    // Afficher le formulaire seulement si l'utilisateur est connecté
+    if (!isAuthenticated()) {
+        addReviewSection.style.display = 'none';
+        return;
+    }
+    addReviewSection.style.display = 'block';
+
+    // Mettre le titre de la place dynamique
+    const placeTitle = document.getElementById('place-title');
+    if (currentPlace) {
+        placeTitle.textContent = `Reviewing: ${currentPlace.name}`;
+    }
+
+    // Uniformiser la taille du textarea
+    const textareas = document.querySelectorAll('.review-textarea');
+    textareas.forEach(t => {
+        t.style.width = '100%';
+        t.style.minHeight = '120px'; // même longueur pour tous
+        t.style.resize = 'vertical'; // laisse redimensionner verticalement
+    });
+
+    // Soumission du formulaire
+    const reviewForm = document.getElementById('review-form');
+    if (!reviewForm) return;
+
+    reviewForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const reviewText = reviewForm.querySelector('#review-text').value.trim();
+        const rating = parseInt(reviewForm.querySelector('#rating').value);
+
+        if (!reviewText || !rating) return alert('Please fill both review and rating');
+
+        try {
+            const token = getCookie('token');
+            const response = await fetch(`${API_URL}/reviews/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ place_id: currentPlace.id, text: reviewText, rating })
+            });
+
+            if (!response.ok) throw new Error('Failed to submit review');
+            const newReview = await response.json();
+
+            currentPlace.reviews.push(newReview);
+            displayReviews(currentPlace.reviews);
+            reviewForm.reset();
+        } catch (err) {
+            console.error(err);
+            alert(err.message);
+        }
+    };
+}
