@@ -160,8 +160,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         // fallback si l'API est indisponible
         const fixedPlaces = [
             { id: 1, name: "Beautiful Beach House", price: 10 },
-            { id: 3, name: "Modern Apartment", price: 50 },
-            { id: 4, name: "Luxury Villa", price: 100 }
+            { id: 3, name: "Cozy Cabin", price: 55 },
+            { id: 4, name: "Modern Apartment", price: 100 }
         ];
         createCards(fixedPlaces);
     }
