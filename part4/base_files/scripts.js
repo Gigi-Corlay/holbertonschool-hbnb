@@ -82,7 +82,7 @@ function createCards(places) {
 
         const article = document.createElement('article');
         article.className = 'place-card card p-3 d-flex flex-column w-100';
-        article.dataset.price = price; // ⭐ IMPORTANT POUR LE FILTRE
+        article.dataset.price = price;
 
         const title = document.createElement('h2');
         title.textContent = place.name;
@@ -151,6 +151,7 @@ async function loadPlaces() {
         return false;
     }
 }
+
 /* ======================
     FETCH PLACE DETAILS
 ====================== */
@@ -167,7 +168,6 @@ async function fetchPlaceDetails() {
 
         if (!response.ok) {
             console.warn("API failed → using fallback");
-
             const fallbackPlaces = {
                 "1": {
                     id: 1,
@@ -175,11 +175,7 @@ async function fetchPlaceDetails() {
                     price_by_night: 10,
                     description: "A beautiful beach house with amazing views",
                     owner: { first_name: "John" },
-                    amenities: [
-                        { name: "Wifi" },
-                        { name: "Pool" },
-                        { name: "Air Conditioning" }
-                    ],
+                    amenities: [{ name: "Wifi" }, { name: "Pool" }, { name: "Air Conditioning" }],
                     reviews: [
                         { user: { first_name: "Jane" }, text: "Great place!", rating: 4 },
                         { user: { first_name: "Robert" }, text: "Amazing location.", rating: 5 }
@@ -191,13 +187,8 @@ async function fetchPlaceDetails() {
                     price_by_night: 55,
                     description: "A beautiful cabin near Vannes harbor",
                     owner: { first_name: "Tom" },
-                    amenities: [
-                        { name: "Wifi" },
-                        { name: "Air Conditioning" }
-                    ],
-                    reviews: [
-                        { user: { first_name: "Alice" }, text: "Very cozy!", rating: 4 }
-                    ]
+                    amenities: [{ name: "Wifi" }, { name: "Air Conditioning" }],
+                    reviews: [{ user: { first_name: "Alice" }, text: "Very cozy!", rating: 4 }]
                 },
                 "3": {
                     id: 3,
@@ -205,31 +196,79 @@ async function fetchPlaceDetails() {
                     price_by_night: 100,
                     description: "A modern apartment with breathtaking views",
                     owner: { first_name: "David" },
-                    amenities: [
-                        { name: "Wifi" },
-                        { name: "Air Conditioning" },
-                        { name: "Home Cinema" },
-                        { name: "Jacuzzi" }
-                    ],
-                    reviews: [
-                        { user: { first_name: "Eve" }, text: "Amazing place!", rating: 5 }
-                    ]
+                    amenities: [{ name: "Wifi" }, { name: "Air Conditioning" }, { name: "Home Cinema" }, { name: "Jacuzzi" }],
+                    reviews: [{ user: { first_name: "Eve" }, text: "Amazing place!", rating: 5 }]
                 }
             };
-
             currentPlace = fallbackPlaces[placeId] || fallbackPlaces["1"];
-            displayPlaceDetails(currentPlace);
-            displayReviews(currentPlace.reviews);
-            return;
+        } else {
+            currentPlace = await response.json();
         }
 
-        currentPlace = await response.json();
         displayPlaceDetails(currentPlace);
         displayReviews(currentPlace.reviews || []);
-
+        setupAddReviewForm();
     } catch (err) {
         console.error(err);
     }
+}
+
+/* ======================
+    SETUP ADD REVIEW FORM
+====================== */
+function setupAddReviewForm() {
+    const addReviewSection = document.getElementById('add-review');
+    if (!addReviewSection) return;
+
+    if (!isAuthenticated()) {
+        addReviewSection.style.display = 'none';
+        return;
+    }
+
+    addReviewSection.style.display = 'block';
+
+    let placeTitle = document.getElementById('place-title');
+    if (!placeTitle) {
+        placeTitle = document.createElement('h3');
+        placeTitle.id = 'place-title';
+        placeTitle.className = 'mb-3 text-start';
+        addReviewSection.prepend(placeTitle);
+    }
+    // placeTitle.textContent = `Reviewing: ${currentPlace.name || 'Unknown Place'}`;
+
+    const reviewForm = document.getElementById('review-form');
+    if (!reviewForm) return;
+
+    reviewForm.onsubmit = async (e) => {
+        e.preventDefault();
+
+        const reviewText = reviewForm.querySelector('#review-text').value.trim();
+        const rating = parseInt(reviewForm.querySelector('#rating').value);
+
+        if (!reviewText || !rating) return alert('Please fill both review and rating');
+
+        try {
+            const token = getCookie('token');
+            const response = await fetch(`${API_URL}/reviews/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ place_id: currentPlace.id, text: reviewText, rating })
+            });
+
+            if (!response.ok) throw new Error('Failed to submit review');
+            const newReview = await response.json();
+
+            currentPlace.reviews.push(newReview);
+            displayReviews(currentPlace.reviews);
+            reviewForm.reset();
+        } catch (err) {
+            console.error(err);
+            alert(err.message);
+        }
+    };
 }
 
 /* ======================
@@ -274,30 +313,16 @@ function displayReviews(reviews) {
     reviews.forEach(r => {
         const article = createElement('article', 'review-card p-3 border rounded shadow-sm mb-3');
 
-        // Nom utilisateur
         const user = createElement('p', '');
         user.innerHTML = `<strong>${r.user?.first_name || 'User'}:</strong>`;
 
-        // Texte review
         const text = createElement('p', '', r.text);
 
-        // Rating + étoiles
         const ratingLine = createElement('p', '');
         ratingLine.innerHTML = '<strong>Rating:</strong> ';
-
         for (let i = 1; i <= 5; i++) {
             const star = createElement('i');
-
-            if (r.rating === 5) {
-                // 5 étoiles noires
-                star.className = 'bi bi-star-fill text-secondary';
-            } else {
-                // étoiles grises + blanches
-                star.className = i <= r.rating
-                    ? 'bi bi-star-fill text-secondary'
-                    : 'bi bi-star text-secondary';
-            }
-
+            star.className = i <= r.rating ? 'bi bi-star-fill text-secondary' : 'bi bi-star text-secondary';
             ratingLine.appendChild(star);
         }
 
@@ -310,61 +335,14 @@ function displayReviews(reviews) {
 }
 
 /* ======================
-    ADD REVIEW FORM
-====================== */
-function setupAddReviewForm() {
-    const addReviewSection = document.getElementById('add-review');
-    if (!addReviewSection) return;
-    if (!isAuthenticated()) {
-        addReviewSection.style.display = 'none';
-        return;
-    }
-    addReviewSection.style.display = 'block';
-
-    const reviewForm = document.getElementById('review-form');
-    if (!reviewForm) return;
-
-    reviewForm.onsubmit = async (e) => {
-        e.preventDefault();
-        const reviewText = reviewForm.querySelector('#review-text').value.trim();
-        const rating = parseInt(reviewForm.querySelector('#rating').value);
-
-        if (!reviewText || !rating) return alert('Please fill both review and rating');
-
-        try {
-            const token = getCookie('token');
-            const response = await fetch(`${API_URL}/reviews/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ place_id: currentPlace.id, text: reviewText, rating })
-            });
-
-            if (!response.ok) throw new Error('Failed to submit review');
-            const newReview = await response.json();
-
-            currentPlace.reviews.push(newReview);
-            displayReviews(currentPlace.reviews);
-            reviewForm.reset();
-        } catch (err) {
-            console.error(err);
-            alert(err.message);
-        }
-    };
-}
-
-/* ======================
     DOM READY
 ====================== */
 document.addEventListener('DOMContentLoaded', async () => {
     toggleLoginLink();
     handleLogin();
 
-    if (window.location.pathname.includes('place.html') || window.location.pathname.includes('place_review.html')) {
+    if (window.location.pathname.includes('place.html')) {
         await fetchPlaceDetails();
-        setupAddReviewForm();
     } else {
         const loaded = await loadPlaces();
         if (!loaded) {
@@ -378,67 +356,3 @@ document.addEventListener('DOMContentLoaded', async () => {
         setupPriceFilter();
     }
 });
-
-
-/* ======================
-    FORM
-====================== */
-function setupAddReviewForm() {
-    const addReviewSection = document.getElementById('add-review');
-    if (!addReviewSection) return;
-
-    // Afficher le formulaire seulement si l'utilisateur est connecté
-    if (!isAuthenticated()) {
-        addReviewSection.style.display = 'none';
-        return;
-    }
-    addReviewSection.style.display = 'block';
-
-    // Mettre le titre de la place dynamique
-    const placeTitle = document.getElementById('place-title');
-    if (currentPlace) {
-        placeTitle.textContent = `Reviewing: ${currentPlace.name}`;
-    }
-
-    // Uniformiser la taille du textarea
-    const textareas = document.querySelectorAll('.review-textarea');
-    textareas.forEach(t => {
-        t.style.width = '100%';
-        t.style.minHeight = '120px'; // même longueur pour tous
-        t.style.resize = 'vertical'; // laisse redimensionner verticalement
-    });
-
-    // Soumission du formulaire
-    const reviewForm = document.getElementById('review-form');
-    if (!reviewForm) return;
-
-    reviewForm.onsubmit = async (e) => {
-        e.preventDefault();
-        const reviewText = reviewForm.querySelector('#review-text').value.trim();
-        const rating = parseInt(reviewForm.querySelector('#rating').value);
-
-        if (!reviewText || !rating) return alert('Please fill both review and rating');
-
-        try {
-            const token = getCookie('token');
-            const response = await fetch(`${API_URL}/reviews/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ place_id: currentPlace.id, text: reviewText, rating })
-            });
-
-            if (!response.ok) throw new Error('Failed to submit review');
-            const newReview = await response.json();
-
-            currentPlace.reviews.push(newReview);
-            displayReviews(currentPlace.reviews);
-            reviewForm.reset();
-        } catch (err) {
-            console.error(err);
-            alert(err.message);
-        }
-    };
-}

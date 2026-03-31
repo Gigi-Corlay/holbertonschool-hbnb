@@ -28,26 +28,26 @@
         </section>
 
         <!-- Reviews -->
-        <section id="reviews">
+        <section id="reviews" class="mb-4">
             <!-- Rempli dynamiquement par JS -->
         </section>
 
         <!-- Add Review Section -->
-        <section id="add-review" class="mb-8" style="display:none;">
+        <section id="add-review" class="mb-4" style="display:none;">
             <div class="row justify-content-start">
-                <div class="col-md-12 col-lg-12">
+                <div class="col-md-12">
 
-                    <!-- Place identifier (rempli dynamiquement) -->
-                    <h3 class="mb-8 text-start">Add a Review</h3>
+                    <!-- Place identifier (rempli dynamiquement par JS) -->
+                    <h3 id="place-title" class="mb-3 text-start">Add a Review</h3>
 
                     <!-- Add Review Form -->
                     <form id="review-form" class="px-0">
-                        <div class="mb-8">
+                        <div class="mb-3">
                             <label for="review-text" class="form-label">Your Review:</label>
                             <textarea id="review-text" name="review-text" class="form-control text-start review-textarea" rows="4" required></textarea>
                         </div>
 
-                        <div class="mb-8">
+                        <div class="mb-3">
                             <label for="rating" class="form-label">Rating:</label>
                             <select id="rating" name="rating" class="form-select text-start" required>
                                 <option value="">Select rating</option>
@@ -59,7 +59,7 @@
                             </select>
                         </div>
 
-                        <button type="submit" class="btn btn-rose text-center w-100">Submit Review</button>
+                        <button type="submit" class="btn btn-rose w-100">Submit Review</button>
                     </form>
 
                 </div>
