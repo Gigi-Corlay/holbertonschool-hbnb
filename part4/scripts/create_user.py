@@ -1,11 +1,14 @@
 #!/usr/bin/python3
 
-from app import create_app
-from app.persistence.user_repository import UserRepository
 import sys
 import os
+from app import create_app, db
+from app.persistence.user_repository import UserRepository
+from app.models.place import Place
 
+# Ajouter le dossier parent au PYTHONPATH pour trouver le package 'app'
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 
 # Crée l'application Flask
 app = create_app()
@@ -13,18 +16,46 @@ app.url_map.strict_slashes = False
 
 if __name__ == "__main__":
     with app.app_context():
+        # ---------- USERS ----------
         repo = UserRepository()
 
         # Vérifie si l'utilisateur existe déjà
         existing_user = repo.get_user_by_email("test@test.com")
         if existing_user:
             print("User test@test.com already exists!")
+            user_id = existing_user.id
         else:
-            # Crée l'utilisateur test
-            repo.create_user(
+            user = repo.create_user(
                 first_name="Test",
                 last_name="User",
                 email="test@test.com",
                 password="test"
             )
             print("User created successfully!")
+            user_id = user.id
+
+        # ---------- PLACES ----------
+        test_places = [
+            {"title": "Beautiful Beach House", "price": 100, "description": "A lovely house by the sea", "latitude": 34.01, "longitude": -118.49},
+            {"title": "Cozy Cabin", "price": 55, "description": "Small and cozy cabin in the woods", "latitude": 45.32, "longitude": -122.67},
+            {"title": "Modern Apartment", "price": 150, "description": "Apartment in the city center", "latitude": 40.71, "longitude": -74.00},
+        ]
+
+        for place_data in test_places:
+            # Vérifie si la place existe déjà
+            existing_place = Place.query.filter_by(title=place_data["title"]).first()
+            if existing_place:
+                print(f"Place '{place_data['title']}' already exists!")
+                continue
+
+            place = Place(
+                title=place_data["title"],
+                price=place_data["price"],
+                description=place_data["description"],
+                latitude=place_data["latitude"],
+                longitude=place_data["longitude"],
+                owner_id=user_id
+            )
+            db.session.add(place)
+            db.session.commit()
+            print(f"Place '{place_data['title']}' created successfully!")
