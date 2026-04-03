@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+import uuid
 from app.extensions import db
 from app.models.base_model import BaseModel
 
@@ -12,12 +13,14 @@ class Place(BaseModel):
     __tablename__ = 'places'
     
     # Columns mapped to the database
-    title       = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.String(500), nullable=True)
+    title      = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.String(255), nullable=True)
     price       = db.Column(db.Float, nullable=False)
-    latitude    = db.Column(db.Float, nullable=False)
-    longitude   = db.Column(db.Float, nullable=False)
-    owner_id    = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
+    latitude    = db.Column(db.Float, nullable=True)
+    longitude   = db.Column(db.Float, nullable=True)
+    owner_id    = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    image_path  = db.Column(db.String(255), nullable=True)
+    uuid        = db.Column(db.String(36), default=lambda: str(uuid.uuid4()), unique=True, nullable=False)
 
     # One-to-Many: Place → Review
     reviews   = db.relationship('Review', backref='place', lazy=True)

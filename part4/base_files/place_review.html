@@ -1,114 +1,91 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>HBnB - Place Review</title>
-        <!-- Bootstrap CSS -->
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="styles.css">
-        <link rel="icon" href="images/icon.png">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    </head>
-<body>
+<section id="reviews" class="mb-5">
 
-    <!-- Header -->
-    <header class="d-flex justify-content-between align-items-center p-3 bg-light border-bottom fixed-top">
-        <a href="index.html">
-            <img src="images/logo.png" alt="HBnB Logo" class="logo" style="height:50px;">
-        </a>
-        <a href="login.html" class="login-button btn btn-rose">Login</a>
-    </header>
+    <!-- Title -->
+    <div class="mb-4">
+        <h2 class="mb-1">Reviews</h2>
+        <p class="text-muted mb-2">Ordre de tri des évaluations : Les plus pertinents</p>
+        <hr class="border-secondary-subtle">
+    </div>
 
-    <!-- Main content -->
-    <main class="container my-5">
+    <!-- Review -->
+    <article class="review-card py-3 border-bottom border-secondary-subtle">
+        <div class="d-flex align-items-start">
+            
+            <!-- Avatar -->
+            <img src="images/user.png" class="review-avatar me-3">
 
-        <!-- Place Details -->
-        <section id="place-details" class="place-details mb-5">
-            <h1 class="card-title mb-3">Beautiful Beach House</h1>
-            <div class="card p-4 border rounded shadow-sm text-center">
-                <div class="place-info">
-                    <p><strong>Host:</strong> John Doe</p>
-                    <p><strong>Price per night:</strong> $150</p>
-                    <p><strong>Description:</strong> A beautiful beach house with amazing views…</p>
-                    <p><strong>Amenities:</strong> Wifi, Pool, Air Conditioning</p>
+            <div class="flex-grow-1">
+                <h6 class="mb-1 fw-bold">Jane Smith</h6>
+
+                <!-- Stars -->
+                <div class="mb-2">
+                    <i class="bi bi-star-fill text-dark"></i>
+                    <i class="bi bi-star-fill text-dark"></i>
+                    <i class="bi bi-star-fill text-dark"></i>
+                    <i class="bi bi-star-fill text-secondary"></i>
+                    <i class="bi bi-star text-dark"></i>
                 </div>
+
+                <p class="mb-0">Great place to stay!</p>
             </div>
-        </section>
 
-        <!-- Reviews -->
-        <section id="reviews" class="mb-5">
-            <h2 class="mb-3">Reviews</h2>
+        </div>
+    </article>
 
-            <article class="review-card p-3 border rounded shadow-sm mb-3 review-card">
-                <p><strong>Jane Smith:</strong></p>
-                <p>Great place to stay!</p>
-                <p class="mb-0">
-                    <strong>Rating:</strong>
-                    <span class="rating rating fs-6">
-                        <i class="bi bi-star-fill"></i>
-                        <i class="bi bi-star-fill"></i>
-                        <i class="bi bi-star-fill"></i>
-                        <i class="bi bi-star-fill"></i>
-                        <i class="bi bi-star"></i>
-                    </span>
-                </p>
-            </article>
+    <!-- Review -->
+    <article class="review-card py-3 border-bottom border-secondary-subtle">
+        <div class="d-flex align-items-start">
+            
+            <img src="images/user.png" class="review-avatar me-3">
 
-            <article class="review-card p-3 border rounded shadow-sm mb-3 review-card">
-                <p><strong>Robert Brown:</strong></p>
-                <p>Amazing location and very comfortable.</p>
-                <p class="mb-0">
-                    <strong>Rating:</strong>
-                    <span class="rating rating fs-6">
-                        <i class="bi bi-star-fill"></i>
-                        <i class="bi bi-star-fill"></i>
-                        <i class="bi bi-star-fill"></i>
-                        <i class="bi bi-star-fill"></i>
-                        <i class="bi bi-star-fill"></i>
-                    </span>
-                </p>
-            </article>
-        </section>
+            <div class="flex-grow-1">
+                <h6 class="mb-1 fw-bold">Robert Brown</h6>
 
-        <!-- Add Review Form -->
-        <section id="add-review" class="mb-5">
-            <h3 class="mb-3">Add a Review</h3>
-            <div class="card p-4 border rounded shadow-sm">
-                <form id="review-form" class="add-review form">
-                    <div class="mb-3">
-                        <label for="review-text" class="form-label">Review:</label>
-                        <textarea id="review-text" name="review-text" class="form-control" rows="4" required></textarea>
-                    </div>
-        
-                    <div class="mb-3">
-                        <label for="rating" class="form-label">Rating:</label>
-                        <select id="rating" name="rating" class="form-select" required>
-                            <option value="">Select rating</option>
-                            <option value="1">1 Star</option>
-                            <option value="2">2 Stars</option>
-                            <option value="3">3 Stars</option>
-                            <option value="4">4 Stars</option>
-                            <option value="5">Stars</option>
-                        </select>
-                    </div>
-        
-                    <div class="text-center">
-                        <button type="submit" class="btn btn-rose w-100">Submit Review</button>
-                    </div>
-                </form>
+                <div class="mb-2">
+                    <i class="bi bi-star-fill text-secondary"></i>
+                    <i class="bi bi-star-fill text-secondary"></i>
+                    <i class="bi bi-star-fill text-secondary"></i>
+                    <i class="bi bi-star-fill text-secondary"></i>
+                    <i class="bi bi-star-fill text-secondary"></i>
+                </div>
+
+                <p class="mb-0">Amazing location and very comfortable.</p>
             </div>
-        </section>
 
-    </main>
+        </div>
+    </article>
 
-    <!-- Footer -->
-    <footer>
-        <p class="mb-0">&copy; 2024 HBnB Evolution. All rights reserved.</p>
-    </footer>
+</section>
 
-    <!-- Bootstrap JS Bundle -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="scripts.js"></script>
-</body>
-</html>
+
+<!-- Add Review -->
+<section id="add-review" class="mb-5">
+    <h3 class="mb-3">Add a Review</h3>
+
+    <div class="border rounded p-4">
+        <form id="review-form">
+
+            <div class="mb-3">
+                <label class="form-label">Review</label>
+                <textarea id="review-text" class="form-control" rows="4"></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Rating</label>
+                <select id="rating" class="form-select">
+                    <option value="">Select rating</option>
+                    <option value="1">1 Star</option>
+                    <option value="2">2 Stars</option>
+                    <option value="3">3 Stars</option>
+                    <option value="4">4 Stars</option>
+                    <option value="5">5 Stars</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-rose w-100">
+                Submit Review
+            </button>
+
+        </form>
+    </div>
+</section>

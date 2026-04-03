@@ -5,61 +5,115 @@
     padding: 0;
     font-family: Arial, sans-serif;
 }
-/* Structure globale */
+
 html, body {
     height: 100%;
-}
-:root {
-    --bs-primary: var(--bs-secondary);
-    --bs-form-control-focus-border-color: var(--bs-secondary);
-    --bs-form-control-focus-box-shadow: none;
 }
 
 body {
     display: flex;
     flex-direction: column;
+    background-color: #f4f4f4;
+    color: #333;
 }
 
-/* Le main prend tout l'espace disponible */
+/* ===== Variables ===== */
+:root {
+    --bs-primary: var(--bs-secondary);
+    --bs-form-control-focus-border-color: var(--bs-secondary);
+    --bs-form-control-focus-box-shadow: none;
+
+    --header-bg: #f0f0f0; /* gris clair */
+    --primary-color: #ff3366;
+    --primary-hover: #e62a55;
+    --text-light: #ffffff;
+
+    --nav-gap: 20px;
+    --header-padding: 15px 30px;
+    --logo-size: 50px;
+}
+
+/* ===== Layout ===== */
 main {
     flex: 1;
     padding-top: 5rem; /* espace pour le header fixe */
 }
 
-body {
-    background-color: #f4f4f4;
-    color: #333; /* gris foncé */
-}
-
 /* ===== Header ===== */
 header {
-    background-color: #333;
+    background-color: #f0f0f0; /* gris pale */
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+    padding: 15px 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.navbar {
+    width: 100%;
+    max-width: 1200px;
+    display: flex;
+    justify-content: space-between; /* logo à gauche, bouton à droite */
+    align-items: center;
+}
+
+/* Logo */
+.logo {
+    height: var(--logo-size);
+}
+
+/* Bouton login/déconnexion */
+.login-button {
+    background-color: #ff3366;
     color: #fff;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: bold;
+    text-decoration: none;
+    transition: 0.3s;
 }
 
-header .logo {
-    height: 50px;
+.login-button:hover {
+    background-color: var(--primary-hover);
+    color: var(--text-light);
+    font-weight: bold;
+    background-color: #e62a55;
 }
 
-/* Header login button override (if needed) */
-header .login-button {
-    cursor: pointer;
+/* ===== Hero Section ===== */
+.hero-section {
+    background-image: url('images/header-ambiance.jpg');
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: cover;
+    width: 100%;
+    min-height: 300px;
+    border-radius: 0.5rem;
+    padding: 2rem;
+    margin: 1.5rem 0 1.5rem 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
 }
 
-/* ===== Navbar ===== */
-nav.navbar {
-    margin-bottom: 1rem;
+.hero-section .hero-title {
+    font-size: 2rem;
+    font-weight: bold;
 }
 
-/* Nav links override */
-nav a.nav-link, nav .navbar-brand {
-    color: #333 !important;
+.hero-section select,
+.hero-section label {
+    color: white;
 }
 
-/* ===== Titles and text ===== */
-h1 {
-    text-align: center; /* centre horizontalement le texte */
-    margin-bottom: 20px; /* espace sous le titre */
+.hero-section select {
+    background-color: rgba(255, 255, 255, 0.8);
+    color: #000;
 }
 
 /* ===== Titles ===== */
@@ -67,64 +121,34 @@ h1, h2, h3 {
     font-weight: bold;
 }
 
-/* Contour gris au focus pour le select */
-#price-filter:focus {
-    outline: 2px solid #ff3366;  /* gris */
-    box-shadow: none;          /* enlève le halo bleu par défaut de Bootstrap */
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
 }
 
-#rating:focus{
-    box-shadow: none;
-    border-color: rgb(206, 204, 204);
+/* ===== Text of places ===== */
+.text-block {
+    border-top: 1px solid #dee2e6;    /* Trait fin gris clair */
+    border-bottom: 1px solid #dee2e6; /* Trait fin gris clair */
+    background-color: transparent;     /* Pas de fond */
+    padding: 1.5rem 1rem;             /* Espace autour du texte */
+    margin-bottom: 2rem;               /* Espace sous le bloc */
 }
 
-.custom-select-no-focus {
-    border: 1px solid #6c757d; /* gris secondaire par défaut */
-    box-shadow: none;
+.text-block p {
+    margin: 0.5rem 0;                  /* Espacement vertical entre paragraphes */
 }
 
-.custom-select-no-focus:focus {
-    border-color: #6c757d; /* même gris que le fond pour ne pas changer */
-    box-shadow: none;
-    outline: none; /* supprime le contour de focus */
+/* ===== Review ===== */
+.review-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
 }
 
-/* ===== Cards ===== */
-.card {
-    margin-bottom: 20px;       /* spacing between cards */
-    padding: 10px;             /* internal spacing */
-    border: 1px solid #ddd;    /* border */
-    border-radius: 10px;       /* rounded corners */
-}
-
-/* ===== Cards Bootstrap CSS : Border Radius + margin + padding + border ===== */
-.place-card, .review-card {
-    border: 1px solid #555;     /* bordure gris foncé */
-    border-radius: 10px;        /* rounded corners */
-    background-color: #fff;     /* fond blanc */
-}
-
-/* Review cards specific */
 .review-card {
-    background-color: #fff;
-}
-
-/* Place cards specific */
-.place-card {
-    display: flex;
-    flex-direction: column;
-    background-color: #fff;
-    min-height: 200px; /* ou la hauteur qui te convient */
-}
-
-.place-card a.btn {
-    margin-top: auto; /* pousse le bouton en bas */
-}
-
-/* ===== size rating ===== */
-.rating i {
-    font-size: 12px !important;  /* force la petite taille */
-    color: #555;
+    border-color: #dee2e6;
 }
 
 /* ===== Forms ===== */
@@ -132,51 +156,117 @@ form label {
     font-weight: bold;
 }
 
-form .form-control, form .form-select, form textarea {
+form .form-control,
+form .form-select,
+form textarea {
     margin-bottom: 1rem;
 }
 
-/* Buttons */
-.details-button, button {
-    border-radius: 5px;
-}
-
-/* Buttons Bootstrap CSS */
-.details-button,
-.btn-rose {
-    background-color: #ff3366;  /* couleur de fond rose */
-    border-color: #ff3366;      /* même couleur pour la bordure */
-    color: #fff;                /* texte blanc */
-}
-
-.details-button:hover,
-.btn-rose:hover {
-    background-color: #e62a55;  /* un peu plus foncé au survol */
-    border-color: #e62a55;
-    color: #fff !important;    /* texte blanc */
-    font-weight: bold;         /* texte en gras */
-}
-
-/* Active (quand on clique) */
 .form-control:active,
 .form-select:active {
     border-color: none;
     box-shadow: none;
 }
 
-/* ===== Footer ===== */
-footer {
-    background-color: #333; /* gris foncé */
-    color: white;       /* texte blanc clair */
-    text-align: center;
-    padding: 1rem 0;
-    font-weight: 500;       /* medium */
+/* Select focus */
+#price-filter:focus {
+    outline: 1px solid #fff;
+    box-shadow: none;
 }
 
+#rating:focus {
+    box-shadow: none;
+    border-color: rgb(206, 204, 204);
+}
 
-/* ===== Responsive adjustments ===== */
+.custom-select-no-focus {
+    border: 1px solid #6c757d;
+    box-shadow: none;
+}
+
+.custom-select-no-focus:focus {
+    border-color: #6c757d;
+    box-shadow: none;
+    outline: none;
+}
+
+/* ===== Cards ===== */
+.card {
+    margin-bottom: 20px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+}
+
+.place-card,
+.review-card {
+    border: 1px solid #555;
+    border-radius: 10px;
+    background-color: #fff;
+}
+
+.place-card {
+    display: flex;
+    flex-direction: column;
+    min-height: 200px;
+}
+
+.place-card h2,
+.place-card h3 {
+    font-size: 1.6rem;
+    margin-bottom: 0.5rem;
+}
+
+.place-card a.btn {
+    margin-top: auto;
+}
+
+.review-card {
+    background-color: #fff;
+}
+
+/* Rating stars */
+.rating i {
+    font-size: 12px !important;
+    color: #555;
+}
+
+/* ===== Buttons ===== */
+.details-button,
+.btn-rose {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: var(--text-light);
+    border-radius: 5px;
+}
+
+.details-button:hover,
+.btn-rose:hover {
+    background-color: var(--primary-hover);
+    border-color: var(--primary-hover);
+    color: var(--text-light);
+    font-weight: bold;
+}
+.star {
+    color: #343a40;   /* gris foncé bootstrap */
+    font-size: 1rem;
+}
+
+/* ===== Footer ===== */
+footer {
+    background-color: #333;
+    color: white;
+    text-align: center;
+    padding: 1rem 0;
+    font-weight: 500;
+}
+
+/* ===== Responsive ===== */
 @media (max-width: 768px) {
-    header, nav, main, footer {
+    header,
+    nav,
+    main,
+    footer {
         padding-left: 1rem;
         padding-right: 1rem;
     }

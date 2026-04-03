@@ -2,13 +2,13 @@
 
 import sys
 import os
-from app import create_app, db
-from app.persistence.user_repository import UserRepository
-from app.models.place import Place
 
 # Ajouter le dossier parent au PYTHONPATH pour trouver le package 'app'
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
+from app import create_app, db
+from app.persistence.user_repository import UserRepository
+from app.models.place import Place
 
 # Crée l'application Flask
 app = create_app()
@@ -54,7 +54,8 @@ if __name__ == "__main__":
                 description=place_data["description"],
                 latitude=place_data["latitude"],
                 longitude=place_data["longitude"],
-                owner_id=user_id
+                owner_id=user_id,
+                image_path="images/beach_house.jpg"
             )
             db.session.add(place)
             db.session.commit()
