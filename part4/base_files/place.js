@@ -69,8 +69,7 @@ const fallbackPlaces = [
     }
 ];
 
-const fallbackPlacesByUUID = {};
-fallbackPlaces.forEach(p => fallbackPlacesByUUID[p.uuid] = p);
+const fallbackPlacesByUUID = Object.fromEntries(fallbackPlaces.map(p => [p.uuid, p]));
 
 /* ======================
     UTILS
@@ -92,15 +91,17 @@ function getPlaceIdFromURL() {
 ====================== */
 function displayPlaceDetails(place) {
     const section = document.getElementById('place-details');
+    section.classList.add('place-details');
     if (!section) return;
     section.innerHTML = '';
 
+    // ===== Title =====
     const title = createElement('h1', 'text-center mb-4', place.name);
 
+    // ===== Carousel =====
     const carouselId = `carousel-${place.id}`;
     const carousel = createElement('div', 'carousel slide mb-4');
     carousel.id = carouselId;
-    carousel.setAttribute('data-bs-ride', 'carousel');
 
     const carouselInner = createElement('div', 'carousel-inner');
     (place.images || []).forEach((imgSrc, index) => {
@@ -114,6 +115,7 @@ function displayPlaceDetails(place) {
     });
     carousel.appendChild(carouselInner);
 
+    // ===== Controls =====
     const prevBtn = createElement('button', 'carousel-control-prev');
     prevBtn.type = 'button';
     prevBtn.setAttribute('data-bs-target', `#${carouselId}`);
@@ -128,13 +130,17 @@ function displayPlaceDetails(place) {
 
     carousel.append(prevBtn, nextBtn);
 
+    // ===== Bootstrap Carousel Init =====
+    new bootstrap.Carousel(carousel, { interval: false, ride: false });
+
+    // ===== Info =====
     const card = createElement('div', 'text-block text-center');
-    const info = createElement('div');
+    const info = createElement('div', 'place-info');
     info.innerHTML = `
         <p><strong>Host:</strong> ${place.owner?.first_name || 'Unknown'}</p>
         <p><strong>Price per night:</strong> $${place.price_by_night}</p>
         <p><strong>Description:</strong> ${place.description}</p>
-        <p><strong>Amenities:</strong> ${place.amenities.map(a => a.name).join(', ')}</p>
+        <p><strong>Amenities:</strong> ${place.amenities?.map(a => a.name).join(', ') || 'None'}</p>
     `;
     card.appendChild(info);
 
@@ -159,8 +165,7 @@ function loadPlace() {
 ====================== */
 function loadStaticReviews() {
     const place = currentPlace || fallbackPlaces[0];
-    const placeId = place.id; // utilise l'ID numérique
-    const fileName = `place_review_${placeId}.html`;
+    const fileName = `place_review_${place.id}.html`;
 
     fetch(fileName)
         .then(response => {
@@ -170,13 +175,11 @@ function loadStaticReviews() {
         .then(html => {
             const container = document.getElementById('reviews-container');
             if (container) container.innerHTML = html;
-
-            const reviews = container.querySelectorAll('.review-card');
-            console.log(`Number of reviews for place ${placeId}:`, reviews.length);
         })
         .catch(err => {
             console.error('Error loading reviews:', err);
-            document.getElementById('reviews-container').innerHTML = '<p>No reviews found.</p>';
+            const container = document.getElementById('reviews-container');
+            if (container) container.innerHTML = '<p>No reviews found.</p>';
         });
 }
 

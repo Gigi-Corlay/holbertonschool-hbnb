@@ -46,11 +46,12 @@ header {
     top: 0;
     width: 100%;
     z-index: 1000;
-    padding: 15px 30px;
+    padding: 10px 30px;
     display: flex;
     justify-content: center;
     align-items: center;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
 }
 
 .navbar {
@@ -230,7 +231,7 @@ form textarea {
 .place-card {
     display: flex;
     flex-direction: column;
-    min-height: 200px;
+    height: 100%;
 }
 
 .place-card h2,
