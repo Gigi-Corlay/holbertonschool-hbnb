@@ -36,12 +36,12 @@ body {
 /* ===== Layout ===== */
 main {
     flex: 1;
-    padding-top: 5rem; /* espace pour le header fixe */
+    padding-top: 5rem; /* space for the fixed header */
 }
 
 /* ===== Header ===== */
 header {
-    background-color: #f0f0f0; /* gris pale */
+    background-color: #f0f0f0; /* pale grey */
     position: fixed;
     top: 0;
     width: 100%;
@@ -168,6 +168,28 @@ form textarea {
     box-shadow: none;
 }
 
+/* Review avatar */
+.review-avatar {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 50%;
+    margin-left: 2 rem;
+}
+
+/* Review card spacing */
+
+#reviews {
+    display: block;
+}
+
+.review-card {
+    padding: 15px;
+    margin-bottom: 1.5rem;
+    width: 100%;
+}
+
+
 /* Select focus */
 #price-filter:focus {
     outline: 1px solid #fff;
@@ -251,6 +273,17 @@ form textarea {
     color: #343a40;   /* gris foncé bootstrap */
     font-size: 1rem;
 }
+
+
+/* Sur écrans ≥576px (sm), largeur 50% */
+@media (min-width: 576px) {
+    .review-card {
+        padding: 15px;
+        width: 70%;
+        margin: 0 auto 1.5rem auto;
+    }
+}
+
 
 /* ===== Footer ===== */
 footer {

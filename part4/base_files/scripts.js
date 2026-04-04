@@ -25,16 +25,16 @@ function toggleLoginLink() {
     if (!loginLink) return;
 
     if (isAuthenticated()) {
-        loginLink.textContent = 'Déconnexion';
+        loginLink.textContent = 'Logout';
         loginLink.href = '#';
         loginLink.onclick = () => {
             document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
             toggleLoginLink();
-            alert("Vous êtes déconnecté !");
+            alert("You are disconnected!");
             window.location.href = 'index.html';
         };
     } else {
-        loginLink.textContent = 'Connexion';
+        loginLink.textContent = 'Login';
         loginLink.href = 'login.html';
         loginLink.onclick = null;
     }
@@ -161,12 +161,12 @@ async function loadPlaces() {
         createCards(places);
     } catch (err) {
         console.error("Failed to load places:", err);
-        // Optionnel : fallback vers les données locales
+        // Optional: fallback to local data
         createCards(fallbackPlaces);
     }
 }
 
-// Appelle la fonction au chargement
+// Calls the function on load
 loadPlaces();
 /* ===== INIT PAGE ===== */
 document.addEventListener('DOMContentLoaded', () => {
