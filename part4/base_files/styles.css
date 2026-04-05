@@ -58,7 +58,7 @@ header {
     width: 100%;
     max-width: 1200px;
     display: flex;
-    justify-content: space-between; /* logo à gauche, bouton à droite */
+    justify-content: space-between;
     align-items: center;
 }
 
@@ -67,7 +67,7 @@ header {
     height: var(--logo-size);
 }
 
-/* Bouton login/déconnexion */
+/* Login/Logout button */
 .login-button {
     background-color: #ff3366;
     color: #fff;
@@ -179,7 +179,6 @@ form textarea {
 }
 
 /* Review card spacing */
-
 #reviews {
     display: block;
 }
@@ -271,12 +270,12 @@ form textarea {
     font-weight: bold;
 }
 .star {
-    color: #343a40;   /* gris foncé bootstrap */
+    color: #343a40;
     font-size: 1rem;
 }
 
 
-/* Sur écrans ≥576px (sm), largeur 50% */
+/* On screens ≥576px (sm), 50% width */
 @media (min-width: 576px) {
     .review-card {
         padding: 15px;
@@ -284,7 +283,23 @@ form textarea {
         margin: 0 auto 1.5rem auto;
     }
 }
+.amenities {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 5px;
+}
 
+.amenity-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #f1f1f1;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+}
 
 /* ===== Footer ===== */
 footer {

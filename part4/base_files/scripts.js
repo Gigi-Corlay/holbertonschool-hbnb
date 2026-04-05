@@ -88,6 +88,30 @@ function handleLogin() {
 }
 
 // ======================
+// Reviews
+// ======================
+function createReviewHTML(name, text, rating) {
+    let starsHTML = '';
+    for (let i = 1; i <= 5; i++) {
+        starsHTML += `<i class="bi ${i <= rating ? 'bi-star-fill text-dark' : 'bi-star text-secondary'}"></i>`;
+    }
+
+    return `
+    <article class="review-card py-3 border-bottom border-secondary-subtle">
+        <div class="d-flex align-items-start">
+            <img src="images/default-avatar.png" class="review-avatar me-3 rounded-circle">
+            <div class="flex-grow-1">
+                <h6 class="mb-1 fw-bold">${name}</h6>
+                <div class="mb-2">${starsHTML}</div>
+                <small class="text-muted d-block mb-1">Just now · Stayed recently</small>
+                <p class="mb-0">${text}</p>
+            </div>
+        </div>
+    </article>
+    `;
+}
+
+// ======================
 // Create Place Cards
 // ======================
 function createCards(places) {
@@ -119,7 +143,6 @@ function createCards(places) {
         const priceText = document.createElement('p');
         priceText.textContent = `Price per night: $${price}`;
 
-        // BUTTON
         const link = document.createElement('a');
         link.href = `place.html?id=${place.uuid || place.id}`;
         link.className = 'details-button btn btn-rose';
@@ -160,7 +183,7 @@ function setupPriceFilter() {
                 case "100+":
                     col.style.display = price >= 100 ? '' : 'none';
                     break;
-                default: // "all" ou valeur vide
+                default:
                     col.style.display = '';
                     break;
             }
@@ -169,17 +192,57 @@ function setupPriceFilter() {
 }
 
 // ======================
+// Review Forms
+// ======================
+const reviewForms = document.querySelectorAll('form[id^="review-form"], form[id^="add-review-form"]');
+
+reviewForms.forEach(form => {
+    form.addEventListener('submit', e => {
+        e.preventDefault();
+
+        const formId = form.id;
+        const index = formId.match(/\d+$/)[0];
+        const textarea = document.getElementById(`review-text${index}`);
+        const rating = document.getElementById(`rating${index}`) || document.getElementById(`rating-${index}`);
+
+        if (!textarea || !rating) return;
+
+        const text = textarea.value.trim();
+        const rateValue = parseInt(rating.value);
+
+        if (!text || rateValue <= 0) {
+            alert('Please enter a review and select a rating.');
+            return;
+        }
+
+        const reviewSection = document.getElementById(`add-review-${index}`);
+        if (reviewSection) {
+            reviewSection.insertAdjacentHTML('afterbegin', createReviewHTML('You', text, rateValue));
+        }
+
+        form.reset();
+    });
+});
+
+// ======================
 // Load Places
 // ======================
 async function loadPlaces() {
     try {
         const token = getCookie('token');
-
         const res = await fetch(`${API_URL}/places`, {
             headers: token ? { 'Authorization': `Bearer ${token}` } : {}
         });
 
-        const places = await res.json();
+        const text = await res.text();
+        let places;
+        try {
+            places = JSON.parse(text);
+        } catch (e) {
+            console.error("Invalid JSON:", text);
+            places = fallbackPlaces;
+        }
+
         createCards(places);
 
     } catch (err) {

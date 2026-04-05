@@ -3,14 +3,14 @@
 import sys
 import os
 
-# Ajouter le dossier parent au PYTHONPATH pour trouver le package 'app'
+# Add the parent folder to the PYTHONPATH to find the 'app' package
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from app import create_app, db
 from app.persistence.user_repository import UserRepository
 from app.models.place import Place
 
-# Crée l'application Flask
+# created the Flask application
 app = create_app()
 app.url_map.strict_slashes = False
 
@@ -19,7 +19,6 @@ if __name__ == "__main__":
         # ---------- USERS ----------
         repo = UserRepository()
 
-        # Vérifie si l'utilisateur existe déjà
         existing_user = repo.get_user_by_email("test@test.com")
         if existing_user:
             print("User test@test.com already exists!")
@@ -42,7 +41,6 @@ if __name__ == "__main__":
         ]
 
         for place_data in test_places:
-            # Vérifie si la place existe déjà
             existing_place = Place.query.filter_by(title=place_data["title"]).first()
             if existing_place:
                 print(f"Place '{place_data['title']}' already exists!")
