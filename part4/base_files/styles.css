@@ -141,12 +141,6 @@ h1 {
 }
 
 /* ===== Review ===== */
-.review-avatar {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    object-fit: cover;
-}
 
 .review-card {
     border-color: #dee2e6;
@@ -165,7 +159,7 @@ form textarea {
 
 .form-control:active,
 .form-select:active {
-    border-color: none;
+    border-color: transparent;
     box-shadow: none;
 }
 
@@ -193,6 +187,10 @@ form textarea {
 #price-filter:focus {
     outline: 1px solid #fff;
     box-shadow: none;
+}
+
+.rating i {
+    font-size: 12px !important;
 }
 
 #rating:focus {
