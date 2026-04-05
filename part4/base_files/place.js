@@ -112,7 +112,7 @@ function createReviewHTML(name, text, rating) {
     return `
     <article class="review-card py-3 border-bottom border-secondary-subtle">
         <div class="d-flex align-items-start">
-            <img src="images/default-avatar.png" class="review-avatar me-3 rounded-circle">
+            <img src="images/profil_0.png" class="review-avatar me-3 rounded-circle">
             <div class="flex-grow-1">
                 <h6 class="mb-1 fw-bold">${name}</h6>
                 <div class="mb-2">${stars}</div>
