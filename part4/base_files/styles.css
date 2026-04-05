@@ -23,7 +23,7 @@ body {
     --bs-form-control-focus-border-color: var(--bs-secondary);
     --bs-form-control-focus-box-shadow: none;
 
-    --header-bg: #f0f0f0; /* gris clair */
+    --header-bg: #f0f0f0;
     --primary-color: #ff3366;
     --primary-hover: #e62a55;
     --text-light: #ffffff;
@@ -129,15 +129,15 @@ h1 {
 
 /* ===== Text of places ===== */
 .text-block {
-    border-top: 1px solid #dee2e6;    /* Trait fin gris clair */
-    border-bottom: 1px solid #dee2e6; /* Trait fin gris clair */
-    background-color: transparent;     /* Pas de fond */
-    padding: 1.5rem 1rem;             /* Espace autour du texte */
-    margin-bottom: 2rem;               /* Espace sous le bloc */
+    border-top: 1px solid #dee2e6;
+    border-bottom: 1px solid #dee2e6;
+    background-color: transparent;
+    padding: 1.5rem 1rem;
+    margin-bottom: 2rem;
 }
 
 .text-block p {
-    margin: 0.5rem 0;                  /* Espacement vertical entre paragraphes */
+    margin: 0.5rem 0;
 }
 
 /* ===== Review ===== */
