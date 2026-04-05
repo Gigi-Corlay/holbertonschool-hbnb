@@ -140,18 +140,6 @@ The front-end will communicate with the API at:
 ```
 http://127.0.0.1:5000/api/v1/
 ```
----
-
-# Et ta section Authors à corriger en Markdown
-
-```markdown
-## 👥 Authors
-
-- **Your Name**
-- HBnB Project — Holberton School
-
----
-
 ## 🏗️ Architecture Overview
 
 ### Front end
@@ -253,6 +241,7 @@ Example demo account:
 | Role | Email           | Password  |
 |------|-----------------|-----------|
 | User | test@test.com   | test      |
+
 
 ---
 
