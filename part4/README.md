@@ -135,7 +135,7 @@ python3 -m http.server 5500
 http://127.0.0.1:5500/index.html
 ```
 
-The front-end will communicate with the API at:
+### The front-end will communicate with the API at:
 ```
 http://127.0.0.1:5000/api/v1/
 ```
