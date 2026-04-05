@@ -2,27 +2,26 @@
 
 ## 📚 Table of Contents
 
-- [📌 Project Context](#-project-context)
-- [📌 Overview](#-overview)
-- [📊 Project at a Glance](#-project-at-a-glance)
-- [✨ Main Features](#-main-features)
-- [🏗️ Architecture Overview](#️-architecture-overview)
-- [🗂️ Project Structure](#️-project-structure)
-- [🛠️ Tech Stack](#️-tech-stack)
-- [📦 Installation](#-installation)
-- [🚀 Running the Application](#-running-the-application)
-- [🔐 Authentication](#-authentication)
-- [👤 Demo Accounts](#-demo-accounts)
-- [🖥️ Front-End Pages](#️-front-end-pages)
-- [🌐 API Endpoints](#-api-endpoints)
-  - [Auth](#auth)
-  - [Places](#places)
-  - [Reviews](#reviews)
-- [🎨 UI / UX Highlights](#-ui--ux-highlights)
-- [🗃️ Demo Data](#️-demo-data)
-- [⚙️ Configuration](#️-configuration)
-- [📎 Notes](#-notes)
-- [👥 Authors](#-authors)
+1. [Project Context](#project-context)
+2. [Overview](#overview)
+3. [Project at a Glance](#project-at-a-glance)
+4. [Main Features](#main-features)
+5. [Back-End Setup (Flask API)](#back-end-setup-flask-api)
+6. [Front-End + Back-End Workflow](#front-end--back-end-workflow)
+7. [Architecture Overview](#architecture-overview)
+8. [Project Structure](#project-structure)
+9. [Tech Stack](#tech-stack)
+10. [Installation](#installation)
+11. [Running the Application](#running-the-application)
+12. [Authentication](#authentication)
+13. [Demo Accounts](#demo-accounts)
+14. [Front-End Pages](#front-end-pages)
+15. [API Endpoints](#api-endpoints)
+16. [UI / UX Highlights](#ui--ux-highlights)
+17. [Demo Data](#demo-data)
+18. [Configuration](#configuration)
+19. [Notes](#notes)
+20. [Authors](#authors)
 
 ---
 
@@ -162,7 +161,7 @@ http://127.0.0.1:5000/api/v1/
 
 ## 🗂️ Project Structure
 
-```bash
+```
 project/
 ├── index.html
 ├── place.html
@@ -175,6 +174,7 @@ project/
 │   ├── places/
 │   └── backgrounds/
 └── README.md
+```
 
 ---
 
@@ -202,20 +202,20 @@ Main backend dependencies:
 
 ## 📦 Installation
 
-### 2. Clone the repository
+**Clone the repository**
 
 ```bash
 git clone https://github.com/yourusername/hbnb-frontend.git
 cd hbnb-frontend
 ```
 
-### 2. Serve files locally (using VS Code Live Server, Python, or any static server):
+**Serve files locally (using VS Code Live Server, Python, or any static server):**
 
 ```bash
 Python 3 example
 python3 -m http.server 5500
 ```
-### 3. Open http://127.0.0.1:5500/index.html in your browser.
+**Open http://127.0.0.1:5500/index.html in your browser.**
 
 ---
 
