@@ -253,8 +253,6 @@ Example demo account:
 | Role | Email           | Password  |
 |------|-----------------|-----------|
 | User | test@test.com   | test      |
-|------|-----------------|-----------|
-
 
 ---
 
