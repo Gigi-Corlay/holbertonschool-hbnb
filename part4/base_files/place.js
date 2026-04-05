@@ -152,7 +152,7 @@ function injectReviewForm(place) {
 
         if (!text || !rating) return alert('Please enter review text and rating');
 
-        // Optionnel : envoyer au backend
+        // Optional: send to the backend
         try {
             const token = document.cookie.split('; ').find(c => c.startsWith('token='))?.split('=')[1];
             if (token) {
@@ -169,7 +169,7 @@ function injectReviewForm(place) {
             console.error('Failed to submit review:', err);
         }
 
-        // Ajout côté client
+        // Add on client side
         const reviewsContainer = document.getElementById('reviews-container');
         reviewsContainer.insertAdjacentHTML('beforeend', createReviewHTML('You', text, rating));
         e.target.reset();
